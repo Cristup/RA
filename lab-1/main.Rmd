@@ -1,0 +1,35 @@
+# Bibliotekos
+
+Užkraunamos reikalingos bibliotekos.
+
+```{r Bibliotekos, message=FALSE, warning=FALSE}
+library(readr)
+library(tidyverse)
+```
+
+# Duoemnų paruošimas
+
+Įkeliami duomenys ir sutvarkomi požymių pavadinimai.
+
+```{r Import data, message=FALSE, warning=FALSE}
+data <- read_csv("../datasets/american_bankruptcy.csv") %>% rename(
+  "current_assets" = "X1",
+  "cost_of_goods_sold" = "X2",
+  "loss_of_value" = "X3",
+  "EBITDA" = "X4",
+  "inventory" = "X5",
+  "net_income" = "X6",
+  "total_receivables" = "X7",
+  "market_value" = "X8",
+  "net_sales" = "X9",
+  "total_assets" = "X10",
+  "total_long_term_debt" = "X11",
+  "EBIT" = "X12",
+  "gross_profit" = "X13",
+  "total_current_liabilities" = "X14",
+  "retained_earnings" = "X15",
+  "total_revenue" = "X16",
+  "total_liabilities" = "X17",
+  "total_operating_expenses" = "X18",
+)
+```
