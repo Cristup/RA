@@ -9,8 +9,28 @@ library(tidyverse)
 
 # Duoemnų paruošimas
 
-Įkeliami duomenys.
+Įkeliami ir sutvarkomi duomenys.
 
 ```{r Import data, message=FALSE, warning=FALSE}
 churn_data <- read_csv("../datasets/Customer Churn.csv")
+
+churn_data <- churn_data %>% rename(
+  "call_failure" = `Call  Failure`,
+  "complains" = Complains,
+  "subscription_length" = `Subscription  Length`,
+  "charge_amount" = `Charge  Amount`,
+  "sec_of_use" = `Seconds of Use`,
+  "freq_of_use" = `Frequency of use`,
+  "freq_of_SMS" = `Frequency of SMS`,
+  "distinct_called_numbers" = `Distinct Called Numbers`,
+  "age_group" = `Age Group`,
+  "tariff_plan" = `Tariff Plan`,
+  "status" = Status,
+  "age" = Age,
+  "customer_value" = `Customer Value`,
+  "churn" = Churn
+)
+
+factors <- c("complains", "charge_amount", "age_group", "tariff_plan", "status", "churn")
+churn_data[factors] <- lapply(churn_data[factors], as.factor)
 ```
