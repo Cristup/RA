@@ -6,6 +6,7 @@ Užkraunamos reikalingos bibliotekos.
 library(readr)
 library(tidyverse)
 library(patchwork)
+library(corrplot)
 library(ppcor)
 ```
 
