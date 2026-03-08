@@ -218,6 +218,18 @@ combined_hist + plot_annotation(
                 legend.text = element_text(size = 10)))
 ```
 
+```{r}
+churn_data %>%
+  dplyr::select(churn, where(is.numeric)) %>%
+  pivot_longer(cols = -churn, names_to = "name", values_to = "value") %>%
+  ggplot(aes(x = churn, y = value, fill = churn)) +
+  geom_boxplot(alpha = 0.7) +
+  facet_wrap(~name, scales = "free") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "Skaitinių kintamųjų pasiskirstymas pagal pasirinkimą",
+       x = "Pasirinkimas (0 = Neatsisakė, 1 = Atsisakė)", y = NULL)
+```
 
 
 # Kokybinių kintamųjų analizė
