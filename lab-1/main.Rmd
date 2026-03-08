@@ -56,4 +56,106 @@ char <- churn_data %>%
 char
 ```
 
+```{r}
+hist1 <- churn_data %>% 
+  ggplot(aes(x = customer_value, fill = churn, color = churn)) +
+  geom_histogram(position = 'identity', bins = 60, alpha = 0.75) +
+  geom_vline(aes(xintercept = 535.5115), color = "blue", size = 1.1, linetype="dashed") +
+  geom_text(aes(x = 660, y = 180, label = "535,51"), size = 4, color = "blue") +
+  geom_vline(aes(xintercept = 124.8114), color = "red", size = 1.1, linetype="dashed") +
+  geom_text(aes(x = 245, y = 180, label = "124.81"), size = 4, color = "red") +
+  labs(x = "Kliento svarba", y = "Dažnis", color = "Pasirinkimas") +
+  scale_fill_manual(name = "Pasirinkimas",
+                    labels = c("1" = "Atsisakė", "0" = "Neatsisakė"),
+                    values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D"),
+                     guide = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12),
+        legend.position = "none")
+hist1
 
+
+hist2 <- churn_data %>% 
+  ggplot(aes(x = subscription_length, fill = churn, color = churn)) +
+  geom_histogram(position = 'identity', bins = 45, alpha = 0.75) +
+  geom_vline(aes(xintercept = 32.6625), color = "blue", size = 1.1, linetype="dashed") +
+  geom_text(aes(x = 35, y = 180, label = "32,66"), size = 4, color = "blue") +
+  geom_vline(aes(xintercept = 31.8949), color = "red", size = 1.1, linetype="dashed") +
+  geom_text(aes(x = 29, y = 180, label = "31,90"), size = 4, color = "red") +
+  labs(x = "Abonimento trukmė (mėn.)", y = NULL, color = "Pasirinkimas") +
+  scale_fill_manual(name = "Pasirinkimas",
+                    labels = c("1" = "Atsisakė", "0" = "Neatsisakė"),
+                    values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D"),
+                     guide = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12),
+        legend.position = "none")
+hist2
+
+
+hist3 <- churn_data %>% 
+  ggplot(aes(x = sec_of_use, fill = churn, color = churn)) +
+  geom_histogram(position = 'identity', bins = 60, alpha = 0.75) +
+  geom_vline(aes(xintercept = 5014.2241), color = "blue", size = 1.1, linetype="dashed") +
+  geom_text(aes(x = 6100, y = 100, label = "5014,22"), size = 4, color = "blue") +
+  geom_vline(aes(xintercept = 1566.6323), color = "red", size = 1.1, linetype="dashed") +
+  geom_text(aes(x = 2650, y = 100, label = "1566,63"), size = 4, color = "red") +
+  labs(x = "Naudojimo trukmė (s)", y = "Dažnis", color = "Pasirinkimas") +
+  scale_fill_manual(name = "Pasirinkimas",
+                    labels = c("1" = "Atsisakė", "0" = "Neatsisakė"),
+                    values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D"),
+                     guide = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12),
+        legend.position = "none")
+hist3
+
+
+hist4 <- churn_data %>% 
+  ggplot(aes(x = freq_of_use, fill = churn, color = churn)) +
+  geom_histogram(position = 'identity', bins = 60, alpha = 0.75) +
+  geom_vline(aes(xintercept = 76.9793), color = "blue", size = 1.1, linetype="dashed") +
+  geom_text(aes(x = 90, y = 100, label = "76,98"), size = 4, color = "blue") +
+  geom_vline(aes(xintercept = 29.1333), color = "red", size = 1.1, linetype="dashed") +
+  geom_text(aes(x = 45, y = 100, label = "29.13"), size = 4, color = "red") +
+  labs(x = "Naudojamo dažnumas (bendras skambučių skaičius)", y = NULL, color = "Pasirinkimas") +
+  scale_fill_manual(name = "Pasirinkimas",
+                    labels = c("1" = "Atsisakė", "0" = "Neatsisakė"),
+                    values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D"),
+                     guide = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11),
+        axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12),
+        legend.position = "none")
+hist4
+```
+
+
+```{r}
+combined_hist <- (hist1 + hist2 + hist3 + hist4) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom")
+
+combined_hist + plot_annotation(
+  title = "Klientų rodiklių pasiskirstymas pagal atsisakymą",
+  subtitle = "Mažiausias grupių vidurkių skirtumas matomas tarp abonimento trukmės. \n(Brūkšninės vertikalios linijos žymi grupių vidurkius).",
+  theme = theme(plot.title = element_text(size = 14),
+                plot.subtitle = element_text(size = 12),
+                legend.title = element_text(size = 11,),
+                legend.text = element_text(size = 10)))
+```
