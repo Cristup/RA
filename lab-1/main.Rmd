@@ -262,6 +262,10 @@ mtext("Skaitinių kintamųjų koreliacijų matrica", side = 3, adj = 0, line = 2
 
 ```{r}
 daline_cor <- pcor(numeric_values, method = "spearman")
-print(daline_cor$estimate)
+
+corrplot(daline_cor$estimate, method = "circle", tl.col = "black", type = 'lower', insig='blank',
+         addCoef.col ='black',number.cex = 0.8,  diag=FALSE)
+
+mtext("Dalinių koreliacijų matrica", side = 3, adj = 0, line = 2, cex = 1.17)
 ```
 
