@@ -34,3 +34,26 @@ churn_data <- churn_data %>% rename(
 factors <- c("complains", "charge_amount", "age_group", "tariff_plan", "status", "churn")
 churn_data[factors] <- lapply(churn_data[factors], as.factor)
 ```
+
+
+# Skaitinės charakteristikos
+
+```{r}
+char <- churn_data %>% 
+  group_by(churn) %>% 
+  summarise(across(where(is.numeric),
+            list(min = ~min(.x, na.rm = TRUE), 
+                 max = ~max(.x, na.rm = TRUE),
+                 mean = ~mean(.x, na.rm = TRUE), 
+                 sd = ~sd(.x, na.rm = TRUE),
+                 q25 = ~quantile(.x, 0.25, na.rm = TRUE),
+                 median = ~median(.x, na.rm = TRUE),
+                 q75 = ~quantile(.x, 0.75, na.rm = TRUE)))) %>% 
+  pivot_longer(cols = -churn, 
+               names_to = c("Variable", ".value"),
+               names_pattern = "(.*)_(min|max|mean|sd|median|q25|q75)") %>% 
+  mutate(across(where(is.numeric), ~ round(.x, 4)))
+char
+```
+
+
