@@ -72,6 +72,17 @@ outlier_summary <- bind_rows(results_list)
 outlier_summary
 ```
 
+```{r}
+churn_data %>%
+  select(where(is.numeric)) %>%
+  pivot_longer(everything()) %>%
+  ggplot(aes(x = name, y = value)) +
+  geom_boxplot() +
+  facet_wrap(~name, scales = "free") +
+  theme_bw() +
+  theme(legend.position = "none")
+```
+
 
 # Skaitinės charakteristikos
 
@@ -92,6 +103,14 @@ char <- churn_data %>%
   mutate(across(where(is.numeric), ~ round(.x, 4)))
 char
 ```
+
+# Atsakas
+
+```{r}
+table(churn_data$churn)
+```
+
+# Kiekybinių kintamųjų analizė
 
 ```{r}
 hist1 <- churn_data %>% 
@@ -196,3 +215,20 @@ combined_hist + plot_annotation(
                 legend.title = element_text(size = 11,),
                 legend.text = element_text(size = 10)))
 ```
+
+
+
+# Kokybinių kintamųjų analizė
+
+```{r}
+kategoriniai_kintamieji <- names(churn_data)[sapply(churn_data, function(x) !is.numeric(x))]
+kategoriniai_kintamieji <- setdiff(kategoriniai_kintamieji, "churn")
+
+for (kintamasis in kategoriniai_kintamieji) {
+  cat("\n--- Kryžminė lentelė kintamajam:", kintamasis, "---\n")
+  lentele <- table(churn_data[[kintamasis]], churn_data$churn, useNA = "ifany")
+  names(dimnames(lentele)) <- c(kintamasis, "Churn")
+  print(lentele)
+}
+```
+
