@@ -6,6 +6,7 @@ Užkraunamos reikalingos bibliotekos.
 library(readr)
 library(tidyverse)
 library(patchwork)
+library(ppcor)
 ```
 
 # Duoemnų paruošimas
@@ -230,5 +231,36 @@ for (kintamasis in kategoriniai_kintamieji) {
   names(dimnames(lentele)) <- c(kintamasis, "Churn")
   print(lentele)
 }
+```
+
+
+# Koreliacijos
+
+```{r}
+numeric_values <- churn_data %>% 
+  select(where(is.numeric)) %>% 
+  rename(
+    "Skambučių sutrikimai" = call_failure,
+    "Abonemento trukmė" = subscription_length,
+    "Naudojimo trukmė" = sec_of_use,
+    "Naudojimo dažnumas" = freq_of_use,
+    "SMS dažnumas" = freq_of_SMS,
+    "Skirtingi numeriai" = distinct_called_numbers,
+    "Amžius" = age,
+    "Kliento vertė" = customer_value
+  )
+
+options(OutDec = ",")
+cor <- cor(numeric_values, method = "spearman")
+corrplot(cor, method = "circle", tl.col = "black", type = 'lower', insig='blank',
+         addCoef.col ='black',number.cex = 0.8,  diag=FALSE)
+
+mtext("Skaitinių kintamųjų koreliacijų matrica", side = 3, adj = 0, line = 2, cex = 1.17)
+#mtext("Didžiausia koreliacija tarp", side = 3, adj = 0, line = 0.95, cex = 0.75)
+```
+
+```{r}
+daline_cor <- pcor(numeric_values, method = "spearman")
+print(daline_cor$estimate)
 ```
 
