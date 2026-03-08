@@ -65,7 +65,7 @@ count_outliers <- function(data, var_name) {
 
 ```{r}
 numeric_cols <- churn_data %>% 
-  select(where(is.numeric)) %>% 
+  dplyr::select(where(is.numeric)) %>% 
   names()
 
 results_list <- lapply(numeric_cols, function(col) count_outliers(churn_data, col))
@@ -75,7 +75,7 @@ outlier_summary
 
 ```{r}
 churn_data %>%
-  select(where(is.numeric)) %>%
+  dplyr::select(where(is.numeric)) %>%
   pivot_longer(everything()) %>%
   ggplot(aes(x = name, y = value)) +
   geom_boxplot() +
@@ -238,7 +238,7 @@ for (kintamasis in kategoriniai_kintamieji) {
 
 ```{r}
 numeric_values <- churn_data %>% 
-  select(where(is.numeric)) %>% 
+  dplyr::select(where(is.numeric)) %>% 
   rename(
     "Skambučių sutrikimai" = call_failure,
     "Abonemento trukmė" = subscription_length,
