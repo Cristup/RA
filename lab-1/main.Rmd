@@ -9,6 +9,7 @@ library(patchwork)
 library(corrplot)
 library(ppcor)
 library(GGally)
+library(car)
 ```
 
 # Duoemnų paruošimas
@@ -315,8 +316,77 @@ scatter_matrix_cat +
 ### cloglog
 
 ```{r}
-cloglog_model <- glm(formula = churn ~ call_failure + complains + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers  + status + customer_value, family = binomial(link = "cloglog"), data = churn_data)
+cloglog_model <- glm(formula = churn ~ call_failure + complains + freq_of_use + freq_of_SMS + status, family = binomial(link = "cloglog"), data = churn_data)
 
 summary(cloglog_model)
 ```
+Multikolinearumas
+
+```{r}
+vif(cloglog_model)
+```
+
+Išskirtys
+
+```{r}
+ggplot(
+  data.frame(cooks = cooks.distance(cloglog_model)),
+  aes(x = seq_along(cooks), y = cooks)) +
+  geom_point(color = "blue", size = 3, alpha = 0.7) +
+  labs(
+    x = "Eilės numeris",
+    y = "Cook mato atstumas") +
+  theme_bw()
+```
+
+```{r}
+cloglog_outliers <- cloglog_cooksd[cooks.distance(cloglog_model)>1]
+cloglog_outliers
+```
+
+```{r}
+library(boot)
+cloglog_pearson_residuals <- glm.diag(cloglog_model)$rp
+
+ggplot(
+  data.frame(pearson = cloglog_pearson_residuals), 
+  aes(x = seq_along(pearson), y = pearson)) +
+  geom_point(color = "blue", size = 3, alpha = 0.7) +
+  labs(
+    x = "Eilės numeris", 
+    y = "Pearson likučiai") +
+  theme_bw()
+```
+COOKS RODO KAD NERA ISSKIRCIU, SITAS RODO KAD DAUG JU
+
+
+Klasifikavimo lentelė
+
+```{r}
+library(QuantPsyc)
+ClassLog(cloglog_model, churn_data$churn)
+```
+
+```{r fig.height=4, fig.width=4}
+cloglog_prediction <- predict(cloglog_model, churn_data, type = "response")
+library(pROC)
+ROC_cloglog <- roc(churn_data$churn, cloglog_prediction)
+ROC_cloglog_auc <- auc(ROC_cloglog)
+
+
+ggroc(ROC_cloglog, color = "blue", size = 1.2) +
+  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+  labs(
+    title = paste0("ROC kreivė (AUC = ", round(ROC_cloglog_auc, 3), ")"),
+    x = "Specifiškumas (Specificity)",
+    y = "Jautrumas (Sensitivity)"
+  ) +
+  theme_bw()
+```
+
+
+
+
+
+
 
