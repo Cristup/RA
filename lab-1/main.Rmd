@@ -8,6 +8,7 @@ library(tidyverse)
 library(patchwork)
 library(corrplot)
 library(ppcor)
+library(GGally)
 ```
 
 # Duoemnų paruošimas
@@ -38,13 +39,14 @@ factors <- c("complains", "charge_amount", "age_group", "tariff_plan", "status",
 churn_data[factors] <- lapply(churn_data[factors], as.factor)
 ```
 
-# Praleistos reikšmės
+# Pradinė analizė
+## Praleistos reikšmės
 
 ```{r}
 sum(is.na(churn_data))
 ```
 
-# Išskirtys
+## Išskirtys
 
 ```{r}
 count_outliers <- function(data, var_name) {
@@ -86,7 +88,7 @@ churn_data %>%
 ```
 
 
-# Skaitinės charakteristikos
+## Skaitinės charakteristikos
 
 ```{r}
 char <- churn_data %>% 
@@ -106,13 +108,13 @@ char <- churn_data %>%
 char
 ```
 
-# Atsakas
+## Atsakas
 
 ```{r}
 table(churn_data$churn)
 ```
 
-# Kiekybinių kintamųjų analizė
+## Kiekybinių kintamųjų analizė
 
 ```{r}
 hist1 <- churn_data %>% 
@@ -232,7 +234,7 @@ churn_data %>%
 ```
 
 
-# Kokybinių kintamųjų analizė
+## Kokybinių kintamųjų analizė
 
 ```{r}
 kategoriniai_kintamieji <- names(churn_data)[sapply(churn_data, function(x) !is.numeric(x))]
@@ -247,7 +249,7 @@ for (kintamasis in kategoriniai_kintamieji) {
 ```
 
 
-# Koreliacijos
+## Koreliacijos
 
 ```{r}
 numeric_values <- churn_data %>% 
@@ -279,5 +281,42 @@ corrplot(daline_cor$estimate, method = "circle", tl.col = "black", type = 'lower
          addCoef.col ='black',number.cex = 0.8,  diag=FALSE)
 
 mtext("Dalinių koreliacijų matrica", side = 3, adj = 0, line = 2, cex = 1.17)
+```
+
+```{r fig.height=10, fig.width=15, message=FALSE, warning=FALSE}
+numeric_values_and_churn <- churn_data %>% 
+  dplyr::select(where(is.numeric), churn)
+
+scatter_matrix_cat <- ggpairs(
+  numeric_values_and_churn,
+  title = "Sklaidos diagramų matrica pagal atsisakymą",
+  mapping = aes(color = churn),
+  lower = list(
+    continuous = wrap("points", size = 0.5, alpha = 0.5)
+  ),
+  diag = list(
+    continuous = wrap("densityDiag", alpha = 0.4)
+  )
+)
+
+scatter_matrix_cat +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+# Modelių sudarymas?
+
+## Atsako balansavimas
+
+## Mokymo ir testavimo aibės
+
+## Modeliai
+
+### cloglog
+
+```{r}
+cloglog_model <- glm(formula = churn ~ call_failure + complains + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers  + status + customer_value, family = binomial(link = "cloglog"), data = churn_data)
+
+summary(cloglog_model)
 ```
 
