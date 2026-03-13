@@ -11,6 +11,7 @@ library(ppcor)
 library(GGally)
 library(car)
 library(rsample)
+library(boot)
 ```
 
 # Duoemnų paruošimas
@@ -312,7 +313,9 @@ scatter_matrix_cat +
 
 ## Mokymo ir testavimo aibės
 
-```{r}
+Aibė padalinama į mokymo ir testavimo aibes pagal atsaką su santykiu 80:20.
+
+```{r train split}
 set.seed(1)
 
 data_split <- initial_split(churn_data, prop = 0.8, strata = churn)
@@ -322,6 +325,48 @@ test_data  <- testing(data_split)
 ```
 
 ## Modeliai
+
+```{r}
+cook_plot <- function(mdl) {
+  ggplot(
+  data.frame(cooks = cooks.distance(mdl)),
+  aes(x = seq_along(cooks), y = cooks)) +
+  geom_point(color = "blue", size = 3, alpha = 0.7) +
+  labs(
+    x = "Eilės numeris",
+    y = "Cook mato atstumas") +
+  theme_bw()
+}
+
+pearson_plot <- function(mdl) {
+  ggplot(
+  data.frame(pearson = glm.diag(mdl)$rp), 
+  aes(x = seq_along(pearson), y = pearson)) +
+  geom_point(color = "blue", size = 3, alpha = 0.7) +
+  labs(
+    x = "Eilės numeris", 
+    y = "Pearson likučiai") +
+  theme_bw()
+}
+```
+
+### Logit modelis
+
+Logit modelis su visais kintamaisiais ir kovariančių multikolinearumas.
+
+```{r initial logit}
+logit_mdl <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group, data = train_data, family = binomial(logit))
+
+summary(logit_mdl)
+vif(logit_mdl)
+```
+
+Logit modelio išskirtys
+
+```{r}
+cook_plot(logit_mdl)
+pearson_plot(logit_mdl)
+```
 
 ### cloglog
 
@@ -339,14 +384,7 @@ vif(cloglog_model)
 Išskirtys
 
 ```{r}
-ggplot(
-  data.frame(cooks = cooks.distance(cloglog_model)),
-  aes(x = seq_along(cooks), y = cooks)) +
-  geom_point(color = "blue", size = 3, alpha = 0.7) +
-  labs(
-    x = "Eilės numeris",
-    y = "Cook mato atstumas") +
-  theme_bw()
+cook_plot(cloglog_model)
 ```
 
 ```{r}
@@ -355,17 +393,7 @@ cloglog_outliers
 ```
 
 ```{r}
-library(boot)
-cloglog_pearson_residuals <- glm.diag(cloglog_model)$rp
-
-ggplot(
-  data.frame(pearson = cloglog_pearson_residuals), 
-  aes(x = seq_along(pearson), y = pearson)) +
-  geom_point(color = "blue", size = 3, alpha = 0.7) +
-  labs(
-    x = "Eilės numeris", 
-    y = "Pearson likučiai") +
-  theme_bw()
+pearson_plot(cloglog_model)
 ```
 COOKS RODO KAD NERA ISSKIRCIU, SITAS RODO KAD DAUG JU
 
