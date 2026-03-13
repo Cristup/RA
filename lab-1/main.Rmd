@@ -321,6 +321,7 @@ set.seed(1)
 data_split <- initial_split(churn_data, prop = 0.8, strata = churn)
 
 train_data <- training(data_split)
+train_data <- train_data %>% slice_sample(prop = 1)
 test_data  <- testing(data_split)
 ```
 
