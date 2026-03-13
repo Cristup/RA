@@ -307,6 +307,14 @@ scatter_matrix_cat +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+# Kategorinių kintamųjų tvarkymas
+
+```{r}
+churn_data2 <- churn_data %>% 
+  filter(charge_amount %in% c(0, 1, 2, 3))
+```
+
+
 
 # Modelių sudarymas?
 
@@ -319,7 +327,7 @@ Aibė padalinama į mokymo ir testavimo aibes pagal atsaką su santykiu 80:20.
 ```{r train split}
 set.seed(1)
 
-data_split <- initial_split(churn_data, prop = 0.8, strata = churn)
+data_split <- initial_split(churn_data2, prop = 0.8, strata = churn)
 
 train_data <- training(data_split)
 train_data <- train_data %>% slice_sample(prop = 1)
@@ -362,7 +370,7 @@ table(train_data$churn)
 
 ```{r}
 set.seed(1)
-smote_data <- ROSE(churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group, data = train_data, N = 4200, p = 0.5)$data
+smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group, data = train_data, N = 4200, p = 0.5)$data
 table(smote_data$churn)
 ```
 
@@ -379,6 +387,17 @@ Logit modelio išskirtys
 cook_plot(logit_mdl)
 pearson_plot(logit_mdl)
 ```
+### Probit modelis
+
+```{r}
+probit_model <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group, data = smote_data, family = binomial(link = "probit"))
+
+summary(probit_model)
+```
+
+
+
+
 
 ### cloglog
 
