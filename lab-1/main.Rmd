@@ -10,6 +10,7 @@ library(corrplot)
 library(ppcor)
 library(GGally)
 library(car)
+library(rsample)
 ```
 
 # Duoemnų paruošimas
@@ -310,6 +311,15 @@ scatter_matrix_cat +
 ## Atsako balansavimas
 
 ## Mokymo ir testavimo aibės
+
+```{r}
+set.seed(1)
+
+data_split <- initial_split(churn_data, prop = 0.8, strata = churn)
+
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+```
 
 ## Modeliai
 
