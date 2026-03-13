@@ -395,7 +395,25 @@ probit_model <- glm(formula = churn ~ call_failure + complains + subscription_le
 summary(probit_model)
 ```
 
+Multikolinearumas
 
+```{r}
+vif(probit_model)
+```
+Išskirtys
+
+```{r}
+cook_plot(probit_model)
+```
+```{r}
+pearson_plot(probit_model)
+```
+
+```{r}
+probit_model2 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status, data = smote_data, family = binomial(link = "probit"))
+
+summary(probit_model2)
+```
 
 
 
