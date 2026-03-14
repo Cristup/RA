@@ -12,10 +12,8 @@ library(GGally)
 library(car)
 library(rsample)
 library(boot)
-library(ROSE); library(smotefamily)
 library(tidymodels)
 library(themis)
-
 library(ggstatsplot)
 library(ggplot2)
 library(QuantPsyc)
@@ -444,7 +442,8 @@ ROC_youden_plot <- function(mdl, train_set, test_set) {
 
 ```
 
-```{r}
+```{r SMOTE data}
+set.seed(1)
 smote_recipe <- recipe(churn ~., data = train_data) %>% 
   step_smotenc(churn, over_ratio = 1.0)
 
