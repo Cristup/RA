@@ -946,9 +946,34 @@ ClassLog(cloglog_model_original_freq_of_use, train_data$churn)
 ROC_plot(cloglog_model_original_freq_of_use, test_data)
 ```
 
+Sąveikos:
+Modelis be sąveikos         1133,1
+call_failure * complains    1130
+call_failure * freq_of_use  1129,5
+freq_of_use * status ir pašalinta subscription_length       1118,8
+
+
+```{r}
+cloglog_model_original_multi <- glm(formula = churn ~ call_failure + complains + freq_of_SMS + freq_of_use * status, family = binomial(link = "cloglog"), data = train_data)
+
+summary(cloglog_model_original_multi)
+vif(cloglog_model_original_multi) #pradinio modelio vifai geri
+```
+
+```{r}
+ClassLog(cloglog_model_original_multi, train_data$churn)
+ROC_plot(cloglog_model_original_multi, test_data)
+```
+
+
 ### Cloglog modelis Youden
 
 ```{r}
 ROC_youden_plot(cloglog_model_original_freq_of_use, train_data, test_data)
 ```
 
+Su sąveika 
+
+```{r}
+ROC_youden_plot(cloglog_model_original_multi, train_data, test_data)
+```
