@@ -443,6 +443,17 @@ ROC_youden_plot <- function(mdl, train_set, test_set) {
          y = "Jautrumas (Sensitivity)") +
     theme_bw()
 }
+
+confusion_test <- function(mdl, test_set) {
+  probs_test <- predict(mdl, newdata = test_set, type = "response")
+  final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
+  
+  confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
+  print(confusion_matrix)
+  
+  confusion_pct <- prop.table(confusion_matrix, 1)
+  print(round(confusion_pct, 2))
+}
 ```
 
 ```{r SMOTE data}
@@ -497,7 +508,8 @@ summary(logit_mdl_smote)
 ```
 
 ```{r}
-ClassLog(logit_mdl_smote, balanced_churn$churn)
+#ClassLog(logit_mdl_smote, balanced_churn$churn)
+confusion_test(logit_mdl_smote, test_data)
 ROC_plot(logit_mdl_smote, test_data)
 ```
 
@@ -514,7 +526,8 @@ summary(logit_mdl_smote_gamma)
 ```
 
 ```{r}
-ClassLog(logit_mdl_smote_gamma, balanced_churn$churn)
+#ClassLog(logit_mdl_smote_gamma, balanced_churn$churn)
+confusion_test(logit_mdl_smote_gamma, test_data)
 ROC_plot(logit_mdl_smote_gamma, test_data)
 ```
 
@@ -525,16 +538,16 @@ outlierTest(logit_mdl_smote_gamma)
 ```
 
 ```{r}
-outliers_idx <- glm.diag(logit_mdl_smote_gamma)$rp %>% as.data.frame() %>% filter(. < -10) %>% row.names()
+#outliers_idx <- glm.diag(logit_mdl_smote_gamma)$rp %>% as.data.frame() %>% filter(. < -10) %>% row.names()
 
-logit_mdl_smote_gamma_v2 <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2 + freq_of_use*age_group2, data = balanced_churn[!rownames(balanced_churn) %in% outliers_idx, ], family = binomial(logit))
+#logit_mdl_smote_gamma_v2 <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + #charge_amount + age_group2 + freq_of_use*age_group2, data = balanced_churn[!rownames(balanced_churn) %in% outliers_idx, ], family = #binomial(logit))
 
-summary(logit_mdl_smote_gamma_v2)
+#summary(logit_mdl_smote_gamma_v2)
 ```
 
 ```{r}
-ClassLog(logit_mdl_smote_gamma_v2, balanced_churn[!rownames(balanced_churn) %in% outliers_idx, ]$churn)
-ROC_plot(logit_mdl_smote_gamma_v2, test_data)
+#ClassLog(logit_mdl_smote_gamma_v2, balanced_churn[!rownames(balanced_churn) %in% outliers_idx, ]$churn)
+#(logit_mdl_smote_gamma_v2, test_data)
 ```
 
 ### Logit (Youden-sec_of_use)
@@ -584,16 +597,16 @@ outlierTest(logit_mdl_su)
 ```
 
 ```{r}
-outliers_idx <- glm.diag(logit_mdl_su)$rp %>% as.data.frame() %>% filter(. > 6) %>% row.names()
+#outliers_idx <- glm.diag(logit_mdl_su)$rp %>% as.data.frame() %>% filter(. > 6) %>% row.names()
 
-logit_mdl_su_v2 <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = train_data[!rownames(train_data) %in% outliers_idx, ], family = binomial(logit))
+#logit_mdl_su_v2 <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = train_data[!rownames(train_data) %in% outliers_idx, ], family = binomial(logit))
 
-summary(logit_mdl_su_v2)
+#summary(logit_mdl_su_v2)
 ```
 
 ```{r}
-ClassLog(logit_mdl_su_v2, train_data[!rownames(train_data) %in% outliers_idx, ]$churn)
-ROC_plot(logit_mdl_su_v2, test_data)
+#ClassLog(logit_mdl_su_v2, train_data[!rownames(train_data) %in% outliers_idx, ]$churn)
+#ROC_plot(logit_mdl_su_v2, test_data)
 ```
 
 ### Logit (Youden-freq_of_use)
@@ -630,16 +643,16 @@ outlierTest(logit_mdl_fu)
 ```
 
 ```{r}
-outliers_idx <- glm.diag(logit_mdl_fu)$rp %>% as.data.frame() %>% filter(. > 6) %>% row.names()
+#outliers_idx <- glm.diag(logit_mdl_fu)$rp %>% as.data.frame() %>% filter(. > 6) %>% row.names()
 
-logit_mdl_fu_v2 <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = train_data[!rownames(train_data) %in% outliers_idx, ], family = binomial(logit))
+#logit_mdl_fu_v2 <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = train_data[!rownames(train_data) %in% outliers_idx, ], family = binomial(logit))
 
-summary(logit_mdl_fu_v2)
+#summary(logit_mdl_fu_v2)
 ```
 
 ```{r}
-ClassLog(logit_mdl_fu_v2, train_data[!rownames(train_data) %in% outliers_idx, ]$churn)
-ROC_plot(logit_mdl_fu_v2, test_data)
+#ClassLog(logit_mdl_fu_v2, train_data[!rownames(train_data) %in% outliers_idx, ]$churn)
+#ROC_plot(logit_mdl_fu_v2, test_data)
 ```
 
 ## Probit
