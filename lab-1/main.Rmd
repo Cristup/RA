@@ -17,7 +17,7 @@ library(ggstatsplot)
 library(ggplot2)
 ```
 
-# Duoemnų paruošimas
+# Duomenų paruošimas
 
 Įkeliami ir sutvarkomi duomenys.
 
@@ -337,11 +337,20 @@ churn_data2 <- churn_data %>%
   filter(charge_amount %in% c(0, 1, 2, 3))
 ```
 
+```{r}
+churn_data2$age_group2 <- ifelse(churn_data2$age_group %in% c("1","2","3"), "1-3", "4-5")
+churn_data2$age_group2 <- as.factor(churn_data2$age_group2)
+table(churn_data2$age_group2, churn_data2$churn)
+```
 
 
-# Modelių sudarymas?
+```{r}
+str(churn_data2)
+```
 
-## Atsako balansavimas
+
+
+# Binarinio atsako modeliai
 
 ## Mokymo ir testavimo aibės
 
@@ -397,6 +406,22 @@ smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + fre
 table(smote_data$churn)
 ```
 
+
+
+```{r}
+kategoriniai_kintamieji2 <- names(smote_data)[sapply(smote_data, function(x) !is.numeric(x))]
+kategoriniai_kintamieji2 <- setdiff(kategoriniai_kintamieji2, "churn")
+
+for (kintamasis in kategoriniai_kintamieji2) {
+  cat("\n--- Kryžminė lentelė kintamajam:", kintamasis, "---\n")
+  lentele <- table(smote_data[[kintamasis]], smote_data$churn, useNA = "ifany")
+  names(dimnames(lentele)) <- c(kintamasis, "Churn")
+  print(lentele)
+}
+```
+
+
+
 ```{r initial logit}
 logit_mdl <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group, data = smote_data, family = binomial(logit))
 
@@ -440,13 +465,14 @@ summary(probit_model2)
 
 
 
-### cloglog
+### Cloglog modelis
 
 ```{r}
-cloglog_model <- glm(formula = churn ~ call_failure + complains + freq_of_use + freq_of_SMS + status, family = binomial(link = "cloglog"), data = churn_data)
+cloglog_model <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group, family = binomial(link = "cloglog"), data = smote_data)
 
 summary(cloglog_model)
 ```
+
 Multikolinearumas
 
 ```{r}
@@ -459,10 +485,6 @@ Išskirtys
 cook_plot(cloglog_model)
 ```
 
-```{r}
-cloglog_outliers <- cloglog_cooksd[cooks.distance(cloglog_model)>1]
-cloglog_outliers
-```
 
 ```{r}
 pearson_plot(cloglog_model)
