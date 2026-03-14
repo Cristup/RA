@@ -402,7 +402,7 @@ table(train_data$churn)
 
 ```{r}
 set.seed(1)
-smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group, data = train_data, N = 4200, p = 0.5)$data
+smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group2, data = train_data, N = 4200, p = 0.5)$data
 table(smote_data$churn)
 ```
 
@@ -423,7 +423,7 @@ for (kintamasis in kategoriniai_kintamieji2) {
 
 
 ```{r initial logit}
-logit_mdl <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group, data = smote_data, family = binomial(logit))
+logit_mdl <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group2, data = smote_data, family = binomial(logit))
 
 summary(logit_mdl)
 vif(logit_mdl)
@@ -435,6 +435,21 @@ Logit modelio išskirtys
 cook_plot(logit_mdl)
 pearson_plot(logit_mdl)
 ```
+Galutinis logit modelis naudojant SMOTE balansavimą bei pažingsnine regresiją.
+
+Eiliškumo tvarka išmesti: charge_amount, freq_of_use, age_group2
+
+```{r}
+set.seed(1)
+smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status, data = train_data, N = 4200, p = 0.5)$data
+table(smote_data$churn)
+
+logit_mdl_smote <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status, data = smote_data, family = binomial(logit))
+
+summary(logit_mdl_smote)
+vif(logit_mdl_smote)
+```
+
 ### Probit modelis
 
 ```{r}
