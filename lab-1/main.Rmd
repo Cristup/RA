@@ -539,7 +539,7 @@ ROC_plot(logit_mdl_smote_gamma_v2, test_data)
 Išmesta: charge_amount, age_group2
 
 ```{r sec_of_use}
-logit_mdl_su <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = churn_data2, family = binomial(logit))
+logit_mdl_su <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = train_data, family = binomial(logit))
 
 summary(logit_mdl_su)
 ```
@@ -556,7 +556,7 @@ subscription_length:status 1425,2
 AUC = 0.911 = 0.911 => sąveika nepagerino rezultatų
 
 ```{r}
-logit_mdl_su_gamma <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status + subscription_length:status, data = churn_data2, family = binomial(logit))
+logit_mdl_su_gamma <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status + subscription_length:status, data = train_data, family = binomial(logit))
 
 #summary(logit_mdl_su_gamma)
 #ROC_youden_plot(logit_mdl_su, train_data, test_data)
@@ -571,13 +571,13 @@ outlierTest(logit_mdl_su)
 ```{r}
 outliers_idx <- glm.diag(logit_mdl_su)$rp %>% as.data.frame() %>% filter(. > 5) %>% row.names()
 
-logit_mdl_su_v2 <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = churn_data2[!rownames(churn_data2) %in% outliers_idx, ], family = binomial(logit))
+logit_mdl_su_v2 <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = train_data[!rownames(train_data) %in% outliers_idx, ], family = binomial(logit))
 
 summary(logit_mdl_su_v2)
 ```
 
 ```{r}
-ClassLog(logit_mdl_su_v2, churn_data2[!rownames(churn_data2) %in% outliers_idx, ]$churn)
+ClassLog(logit_mdl_su_v2, train_data[!rownames(train_data) %in% outliers_idx, ]$churn)
 ROC_plot(logit_mdl_su_v2, test_data)
 ```
 
@@ -586,7 +586,7 @@ ROC_plot(logit_mdl_su_v2, test_data)
 Išmesta: charge_amount, age_group2, distinct_called_numbers
 
 ```{r freq_of_use}
-logit_mdl_fu <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = churn_data2, family = binomial(logit))
+logit_mdl_fu <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = train_data, family = binomial(logit))
 
 summary(logit_mdl_fu)
 ```
@@ -602,7 +602,7 @@ subscription_length:status 1423,6
 AUC lygūs
 
 ```{r}
-logit_mdl_fu_gamma <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status + subscription_length:status, data = churn_data2, family = binomial(logit))
+logit_mdl_fu_gamma <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status + subscription_length:status, data = train_data, family = binomial(logit))
 
 #summary(logit_mdl_fu_gamma)
 #ROC_youden_plot(logit_mdl_fu, train_data, test_data)
@@ -617,13 +617,13 @@ outlierTest(logit_mdl_fu)
 ```{r}
 outliers_idx <- glm.diag(logit_mdl_fu)$rp %>% as.data.frame() %>% filter(. > 5) %>% row.names()
 
-logit_mdl_fu_v2 <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = churn_data2[!rownames(churn_data2) %in% outliers_idx, ], family = binomial(logit))
+logit_mdl_fu_v2 <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = train_data[!rownames(train_data) %in% outliers_idx, ], family = binomial(logit))
 
 summary(logit_mdl_fu_v2)
 ```
 
 ```{r}
-ClassLog(logit_mdl_fu_v2, churn_data2[!rownames(churn_data2) %in% outliers_idx, ]$churn)
+ClassLog(logit_mdl_fu_v2, train_data[!rownames(train_data) %in% outliers_idx, ]$churn)
 ROC_plot(logit_mdl_fu_v2, test_data)
 ```
 
