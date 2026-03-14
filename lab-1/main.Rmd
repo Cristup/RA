@@ -452,32 +452,23 @@ balanced_churn <- juice(trained_recipe)
 ```
 
 ## Logit
-### Logit (SMOTE)
 
-Logit modelis su visais kintamaisiais ir kovariančių multikolinearumas.
-
-```{r}
-set.seed(1)
-smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2, data = train_data, N = 4200, p = 0.5)$data
-table(smote_data$churn)
-```
+Logit modelis su visais kintamaisiais ir kovariančių multikolinearumas balancuotam rinkiniui.
 
 ```{r}
-kategoriniai_kintamieji2 <- names(smote_data)[sapply(smote_data, function(x) !is.numeric(x))]
+kategoriniai_kintamieji2 <- names(balanced_churn)[sapply(balanced_churn, function(x) !is.numeric(x))]
 kategoriniai_kintamieji2 <- setdiff(kategoriniai_kintamieji2, "churn")
 
 for (kintamasis in kategoriniai_kintamieji2) {
   cat("\n--- Kryžminė lentelė kintamajam:", kintamasis, "---\n")
-  lentele <- table(smote_data[[kintamasis]], smote_data$churn, useNA = "ifany")
+  lentele <- table(balanced_churn[[kintamasis]], balanced_churn$churn, useNA = "ifany")
   names(dimnames(lentele)) <- c(kintamasis, "Churn")
   print(lentele)
 }
 ```
 
-
-
 ```{r initial logit}
-logit_mdl <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + + status + charge_amount + age_group2, data = smote_data, family = binomial(logit))
+logit_mdl <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2, data = balanced_churn, family = binomial(logit))
 
 summary(logit_mdl)
 vif(logit_mdl)
@@ -485,74 +476,72 @@ vif(logit_mdl)
 
 Logit modelio išskirtys
 
-```{r}
-cook_plot(logit_mdl)
+```{r fig.height=3, fig.width=8.7}
+cook_plot(logit_mdl) +
 pearson_plot(logit_mdl)
 ```
-Galutinis logit modelis naudojant SMOTE balansavimą bei pažingsnine regresiją.
+### Logit (SMOTE)
 
-Eiliškumo tvarka išmesti: charge_amount, sec_of_use, tariff_plan
+Galutinis logit modelis naudojant SMOTE balansavimą bei pažingsninę regresiją.
+
+Nereikšmingi abu multikolinerūs požymiai sec_of_use ir freq_of_use. Taip pat buvo ir sudarant modelius kandidatus.
 
 ```{r}
-set.seed(1)
-smote_data <- ROSE(churn ~ call_failure + subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + age_group2 + freq_of_use, data = train_data, N = 4200, p = 0.5)$data
-table(smote_data$churn)
-
-logit_mdl_smote <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + age_group2 + freq_of_use, data = smote_data, family = binomial(logit))
+logit_mdl_smote <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2, data = balanced_churn, family = binomial(logit))
 
 summary(logit_mdl_smote)
-vif(logit_mdl_smote)
 ```
 
 ```{r}
-ClassLog(logit_mdl_smote, smote_data$churn)
+ClassLog(logit_mdl_smote, balanced_churn$churn)
 ROC_plot(logit_mdl_smote, test_data)
 ```
 
-2945,2
-subscription_length:freq_of_SMS 2931,4
-subscription_length:status 2876,9
-subscription_length:age_group2 2819,6
+2573,6
+call_failure*complains 2513,4
+call_failure*subscription_length 2501,1
+subscription_length*status 2463,7
+freq_of_use*age_group2 2447,7
+
 
 ```{r}
-set.seed(1)
-smote_data <- ROSE(churn ~ call_failure + subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + age_group2 + freq_of_use, data = train_data, N = 4200, p = 0.5)$data
-
-logit_mdl_smote_gamma <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + age_group2 + freq_of_use + subscription_length:age_group2, data = smote_data, family = binomial(logit))
+logit_mdl_smote_gamma <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2 + freq_of_use*age_group2, data = balanced_churn, family = binomial(logit))
 
 summary(logit_mdl_smote_gamma)
 ```
 
 ```{r}
-ClassLog(logit_mdl_smote_gamma, smote_data$churn)
+ClassLog(logit_mdl_smote_gamma, balanced_churn$churn)
 ROC_plot(logit_mdl_smote_gamma, test_data)
 ```
-charge_amount
-sec_of_use
-tariff_plan
 
-2945,2
-charge_amount*sec_of_use 2916,9
-AUC = 0.907 < 0.921
+```{r fig.height=3, fig.width=8.7}
+cook_plot(logit_mdl_smote_gamma) +
+pearson_plot(logit_mdl_smote_gamma)
+outlierTest(logit_mdl_smote_gamma)
+```
 
---------------------------------------------------------------------------------
-charge_amount
-sec_of_use
-tariff_plan
+```{r}
+outliers_idx <- glm.diag(logit_mdl_smote_gamma)$rp %>% as.data.frame() %>% filter(. < -5) %>% row.names()
 
-2945,2
-tariff_plan*freq_of_SMS 2941,8
-AUC = 0.91 < 0.921
+logit_mdl_smote_gamma_v2 <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2 + freq_of_use*age_group2, data = balanced_churn[!rownames(balanced_churn) %in% outliers_idx, ], family = binomial(logit))
+
+summary(logit_mdl_smote_gamma_v2)
+```
+
+```{r}
+ClassLog(logit_mdl_smote_gamma_v2, balanced_churn[!rownames(balanced_churn) %in% outliers_idx, ]$churn)
+ROC_plot(logit_mdl_smote_gamma_v2, test_data)
+```
 
 ### Logit (Youden-sec_of_use)
 
-Išmesta: tariff_plan, charge_amount, age_group2
+Išmesta: charge_amount, age_group2
 
 ```{r sec_of_use}
 logit_mdl_su <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = churn_data2, family = binomial(logit))
 
 summary(logit_mdl_su)
-vif(logit_mdl_su)
 ```
 
 
@@ -564,46 +553,46 @@ ROC_youden_plot(logit_mdl_su, train_data, test_data)
 subscription_length:freq_of_SMS 1455,6
 subscription_length:complains 1442,7
 subscription_length:status 1425,2
-AUC = 0.856 < 0.862 => sąveika nepagerino rezultatų
+AUC = 0.911 = 0.911 => sąveika nepagerino rezultatų
 
---------------------------------------------------------------------------------
+```{r}
+logit_mdl_su_gamma <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status + subscription_length:status, data = churn_data2, family = binomial(logit))
+
+#summary(logit_mdl_su_gamma)
+#ROC_youden_plot(logit_mdl_su, train_data, test_data)
+```
+
+```{r fig.height=3, fig.width=8.7}
+cook_plot(logit_mdl_su) +
+pearson_plot(logit_mdl_su)
+outlierTest(logit_mdl_su)
+```
+
+```{r}
+outliers_idx <- glm.diag(logit_mdl_su)$rp %>% as.data.frame() %>% filter(. > 5) %>% row.names()
+
+logit_mdl_su_v2 <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = churn_data2[!rownames(churn_data2) %in% outliers_idx, ], family = binomial(logit))
+
+summary(logit_mdl_su_v2)
+```
+
+```{r}
+ClassLog(logit_mdl_su_v2, churn_data2[!rownames(churn_data2) %in% outliers_idx, ]$churn)
+ROC_plot(logit_mdl_su_v2, test_data)
+```
 
 ### Logit (Youden-freq_of_use)
 
-Išmesta: charge_amount, tariff_plan, age_group2, distinct_called_numbers
+Išmesta: charge_amount, age_group2, distinct_called_numbers
 
 ```{r freq_of_use}
 logit_mdl_fu <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = churn_data2, family = binomial(logit))
 
 summary(logit_mdl_fu)
-vif(logit_mdl_fu)
 ```
 
 ```{r}
-probs_train <- predict(logit_mdl_fu, newdata = train_data, type = "response")
-roc_curve_train <- roc(train_data$churn, probs_train)
-
-optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
-best_threshold <- optimal_coords$threshold
-
-print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
-print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
-print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
-
-probs_test <- predict(logit_mdl_fu, newdata = test_data, type = "response")
-final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
-
-table(Tikra = test_data$churn, Prognoze = final_preds_test)
-
-ROC_probit <- roc(test_data$churn, probs_test)
-ROC_probit_auc <- auc(ROC_probit)
-
-ggroc(ROC_probit, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
-       x = "Specifiškumas (Specificity)",
-       y = "Jautrumas (Sensitivity)") +
-  theme_bw()
+ROC_youden_plot(logit_mdl_fu, train_data, test_data)
 ```
 
 1454,7
@@ -612,6 +601,33 @@ subscription_length:complains 1433,1
 subscription_length:status 1423,6
 AUC lygūs
 
+```{r}
+logit_mdl_fu_gamma <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status + subscription_length:status, data = churn_data2, family = binomial(logit))
+
+#summary(logit_mdl_fu_gamma)
+#ROC_youden_plot(logit_mdl_fu, train_data, test_data)
+```
+
+```{r fig.height=3, fig.width=8.7}
+cook_plot(logit_mdl_fu) +
+pearson_plot(logit_mdl_fu)
+outlierTest(logit_mdl_fu)
+```
+
+```{r}
+outliers_idx <- glm.diag(logit_mdl_fu)$rp %>% as.data.frame() %>% filter(. > 5) %>% row.names()
+
+logit_mdl_fu_v2 <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = churn_data2[!rownames(churn_data2) %in% outliers_idx, ], family = binomial(logit))
+
+summary(logit_mdl_fu_v2)
+```
+
+```{r}
+ClassLog(logit_mdl_fu_v2, churn_data2[!rownames(churn_data2) %in% outliers_idx, ]$churn)
+ROC_plot(logit_mdl_fu_v2, test_data)
+```
+
+## Probit
 ### Probit modelis
 
 Balansavimas naudojantis SMOTE
