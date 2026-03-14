@@ -492,11 +492,19 @@ pearson_plot(cloglog_model)
 COOKS RODO KAD NERA ISSKIRCIU, SITAS RODO KAD DAUG JU
 
 
+```{r}
+final_cloglog_model <- glm(formula = churn ~ call_failure + complains + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + status, family = binomial(link = "cloglog"), data = smote_data)
+
+summary(final_cloglog_model)
+```
+
+
+
 Klasifikavimo lentelė
 
 ```{r}
 library(QuantPsyc)
-ClassLog(cloglog_model, churn_data$churn)
+ClassLog(final_cloglog_model, smote_data$churn)
 ```
 
 ```{r fig.height=4, fig.width=4}
@@ -518,6 +526,31 @@ ggroc(ROC_cloglog, color = "blue", size = 1.2) +
 
 
 
+```{r}
+cloglog_model <- glm(formula = churn ~ call_failure + complains + subscription_length + 
+                       charge_amount + sec_of_use + freq_of_use + freq_of_SMS + 
+                       distinct_called_numbers + tariff_plan + status + age_group, 
+                     family = binomial(link = "cloglog"), 
+                     data = churn_data2)
+
+probs <- predict(cloglog_model, type = "response")
+
+roc_curve <- roc(churn_data2$churn, probs)
+
+optimal_coords <- coords(roc_curve, "best", ret = c("threshold", "specificity", "sensitivity"), 
+                         best.method = "youden")
+
+best_threshold <- optimal_coords$threshold
+
+print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
+print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
+print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
+
+
+final_preds <- ifelse(probs >= best_threshold, 1, 0)
+
+table(Tikra = churn_data2$churn, Prognoze = final_preds)
+```
 
 
 
