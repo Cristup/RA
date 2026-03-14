@@ -427,7 +427,11 @@ ROC_youden_plot <- function(mdl, train_set, test_set) {
   probs_test <- predict(mdl, newdata = test_set, type = "response")
   final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
   
-  print(table(Tikra = test_set$churn, Prognoze = final_preds_test))
+  confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
+  print(confusion_matrix)
+  
+  confusion_pct <- prop.table(confusion_matrix, 1)
+  print(round(confusion_pct, 2))
   
   ROC_probit <- roc(test_set$churn, probs_test)
   ROC_probit_auc <- auc(ROC_probit)
@@ -439,7 +443,6 @@ ROC_youden_plot <- function(mdl, train_set, test_set) {
          y = "Jautrumas (Sensitivity)") +
     theme_bw()
 }
-
 ```
 
 ```{r SMOTE data}
@@ -479,6 +482,7 @@ Logit modelio išskirtys
 ```{r fig.height=3, fig.width=8.7}
 cook_plot(logit_mdl) +
 pearson_plot(logit_mdl)
+outlierTest(logit_mdl)
 ```
 ### Logit (SMOTE)
 
@@ -503,7 +507,6 @@ call_failure*subscription_length 2501,1
 subscription_length*status 2463,7
 freq_of_use*age_group2 2447,7
 
-
 ```{r}
 logit_mdl_smote_gamma <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2 + freq_of_use*age_group2, data = balanced_churn, family = binomial(logit))
 
@@ -522,7 +525,7 @@ outlierTest(logit_mdl_smote_gamma)
 ```
 
 ```{r}
-outliers_idx <- glm.diag(logit_mdl_smote_gamma)$rp %>% as.data.frame() %>% filter(. < -5) %>% row.names()
+outliers_idx <- glm.diag(logit_mdl_smote_gamma)$rp %>% as.data.frame() %>% filter(. < -10) %>% row.names()
 
 logit_mdl_smote_gamma_v2 <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2 + freq_of_use*age_group2, data = balanced_churn[!rownames(balanced_churn) %in% outliers_idx, ], family = binomial(logit))
 
@@ -535,6 +538,18 @@ ROC_plot(logit_mdl_smote_gamma_v2, test_data)
 ```
 
 ### Logit (Youden-sec_of_use)
+
+```{r}
+logit_mdl_yd <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2, data = train_data, family = binomial(logit))
+
+summary(logit_mdl_yd)
+vif(logit_mdl_yd)
+```
+```{r fig.height=3, fig.width=8.7}
+cook_plot(logit_mdl_yd) +
+pearson_plot(logit_mdl_yd)
+outlierTest(logit_mdl_yd)
+```
 
 Išmesta: charge_amount, age_group2
 
@@ -569,7 +584,7 @@ outlierTest(logit_mdl_su)
 ```
 
 ```{r}
-outliers_idx <- glm.diag(logit_mdl_su)$rp %>% as.data.frame() %>% filter(. > 5) %>% row.names()
+outliers_idx <- glm.diag(logit_mdl_su)$rp %>% as.data.frame() %>% filter(. > 6) %>% row.names()
 
 logit_mdl_su_v2 <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = train_data[!rownames(train_data) %in% outliers_idx, ], family = binomial(logit))
 
@@ -615,7 +630,7 @@ outlierTest(logit_mdl_fu)
 ```
 
 ```{r}
-outliers_idx <- glm.diag(logit_mdl_fu)$rp %>% as.data.frame() %>% filter(. > 5) %>% row.names()
+outliers_idx <- glm.diag(logit_mdl_fu)$rp %>% as.data.frame() %>% filter(. > 6) %>% row.names()
 
 logit_mdl_fu_v2 <- glm(formula = churn ~ subscription_length + freq_of_use + freq_of_SMS + complains + status, data = train_data[!rownames(train_data) %in% outliers_idx, ], family = binomial(logit))
 
