@@ -267,6 +267,8 @@ gg4 <- ggbetweenstats(data = churn_data, x = churn, y = distinct_called_numbers 
 ## Kokybinių kintamųjų analizė
 
 
+
+
 ```{r}
 kategoriniai_kintamieji <- names(churn_data)[sapply(churn_data, function(x) !is.numeric(x))]
 kategoriniai_kintamieji <- setdiff(kategoriniai_kintamieji, "churn")
@@ -468,6 +470,7 @@ balanced_churn <- juice(trained_recipe)
 ## Logit
 
 Logit modelis su visais kintamaisiais ir kovariančių multikolinearumas balancuotam rinkiniui.
+
 
 ```{r}
 kategoriniai_kintamieji2 <- names(balanced_churn)[sapply(balanced_churn, function(x) !is.numeric(x))]
@@ -818,6 +821,7 @@ summary(probit_model32_interaction)
 ROC_youden_plot(probit_model32_interaction, train_data, test_data)
 ```
 
+<<<<<<< Updated upstream
 
 
 ### Cloglog modelis SMOTE
@@ -947,11 +951,25 @@ MULITKOLINEARUUMO PROBLEMA
 #table(Tikra = churn_data2$churn, Prognoze = final_preds)
 ```
 
+=======
+```{r}
+ROC_probit <- roc(test_data$churn, probs_test)
+ROC_probit_auc <- auc(ROC_probit)
+
+ggroc(ROC_probit, color = "blue", size = 1.2) +
+  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
+       x = "Specifiškumas (Specificity)",
+       y = "Jautrumas (Sensitivity)") +
+  theme_bw()
+```
+# Cloglog
+>>>>>>> Stashed changes
 
 ### Cloglog modelis ant orginalių duomenų
 
 ```{r}
-cloglog_model_original <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group2, family = binomial(link = "cloglog"), data = train_data)
+cloglog_model_original <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2, family = binomial(link = "cloglog"), data = train_data)
 
 summary(cloglog_model_original)
 ```
@@ -967,6 +985,11 @@ cook_plot(cloglog_model_original)
 pearson_plot(cloglog_model_original)
 ```
 
+```{r}
+outlierTest(cloglog_model_original)
+```
+
+
 
 Multikolinearumas
 
@@ -976,22 +999,41 @@ vif(cloglog_model_original)
 
 Multikolineraumas tarp freq_of_use ir sec_of_use. Skaidome į modelius pretendentus
 
-Modelis su freq_of_use: išmesta charge_amount, distinct_called_numbers, age_group2, tariff_plan
+Modelis su freq_of_use: išmesta sec_of_use, charge_amount, distinct_called_numbers, age_group2, tariff_plan
 
 ```{r}
-cloglog_model_original_freq_of_use  <- glm(formula = churn ~ call_failure + complains + subscription_length + freq_of_use + freq_of_SMS + status, family = binomial(link = "cloglog"), data = train_data)
+cloglog_model_original_freq_of_use <- glm(formula = churn ~ call_failure + complains + subscription_length + freq_of_use + freq_of_SMS + status, family = binomial(link = "cloglog"), data = train_data)
 
 summary(cloglog_model_original_freq_of_use)
-# vif(cloglog_model_original_freq_of_use) pradinio modelio vifai geri
+vif(cloglog_model_original_freq_of_use) #pradinio modelio vifai geri
 ```
 
-Modelis su sec_of_use: išmesta charge_amount, age_group2, tariff_plan
+Modelis su sec_of_use: išmesta freq_of_use, charge_amount, age_group2, tariff_plan
 
 ```{r}
 cloglog_model_original_sec_of_use <- glm(formula = churn ~ call_failure + complains + subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + status, family = binomial(link = "cloglog"), data = train_data)
 
 summary(cloglog_model_original_sec_of_use)
-#vif(cloglog_model_original_sec_of_use)viskas gerai su pradinio modelio vifais
+vif(cloglog_model_original_sec_of_use)  #viskas gerai su pradinio modelio vifais
 ```
 
+AIC ir BIC:
+
+```{r}
+AIC(cloglog_model_original_freq_of_use, cloglog_model_original_sec_of_use)
+BIC(cloglog_model_original_freq_of_use, cloglog_model_original_sec_of_use)
+```
+
+Geresnis modelis su freq_of_use
+
+```{r}
+ClassLog(cloglog_model_original_freq_of_use, train_data$churn)
+ROC_plot(cloglog_model_original_freq_of_use, test_data)
+```
+
+### Cloglog modelis Youden
+
+```{r}
+ROC_youden_plot(cloglog_model_original_freq_of_use, train_data, test_data)
+```
 
