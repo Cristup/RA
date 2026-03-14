@@ -533,35 +533,42 @@ vif(logit_mdl_su)
 ```
 
 ```{r}
-probs <- predict(logit_mdl_su, newdata = test_data, type = "response")
+rocobj <- roc(logit_mdl_su$y, logit_mdl_su$fitted.values)
 
-roc_curve <- roc(test_data$churn, probs)
+best_threshold <- coords(rocobj, "best", best.method = "youden", 
+                         ret = c("threshold", "specificity", "sensitivity"))
 
-optimal_coords <- coords(roc_curve, "best", ret = c("threshold", "specificity", "sensitivity"), 
-                         best.method = "youden")
+print(best_threshold)
 
+optimal_cut <- best_threshold$threshold
+```
+
+```{r}
+probs_train <- predict(logit_mdl_su, newdata = train_data, type = "response")
+roc_curve_train <- roc(train_data$churn, probs_train)
+
+optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
 best_threshold <- optimal_coords$threshold
 
 print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
 print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
 print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
 
+probs_test <- predict(logit_mdl_su, newdata = test_data, type = "response")
+final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
 
-final_preds <- ifelse(probs >= best_threshold, 1, 0)
+table(Tikra = test_data$churn, Prognoze = final_preds_test)
+```
 
-table(Tikra = test_data$churn, Prognoze = final_preds)
+```{r}
+ROC_probit <- roc(test_data$churn, probs_test)
+ROC_probit_auc <- auc(ROC_probit)
 
-ROC_logit_mdl_su <- roc(test_data$churn, final_preds)
-ROC_logit_mdl_su_auc <- auc(ROC_logit_mdl_su)
-
-
-ggroc(ROC_logit_mdl_su, color = "blue", size = 1.2) +
+ggroc(ROC_probit, color = "blue", size = 1.2) +
   geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(
-    title = paste0("ROC kreivė (AUC = ", round(ROC_logit_mdl_su_auc, 3), ")"),
-    x = "Specifiškumas (Specificity)",
-    y = "Jautrumas (Sensitivity)"
-  ) +
+  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
+       x = "Specifiškumas (Specificity)",
+       y = "Jautrumas (Sensitivity)") +
   theme_bw()
 ```
 
@@ -571,6 +578,8 @@ subscription_length:complains 1442,7
 subscription_length:status 1425,2
 AUC = 0.856 < 0.862 => sąveika nepagerino rezultatų
 
+--------------------------------------------------------------------------------
+
 Išmesta: charge_amount, tariff_plan, age_group2, distinct_called_numbers
 
 ```{r freq_of_use}
@@ -579,36 +588,40 @@ logit_mdl_fu <- glm(formula = churn ~ subscription_length + freq_of_use + freq_o
 summary(logit_mdl_fu)
 vif(logit_mdl_fu)
 ```
+
 ```{r}
-probs <- predict(logit_mdl_fu, newdata = test_data, type = "response")
+rocobj <- roc(logit_mdl_fu$y, logit_mdl_fu$fitted.values)
 
-roc_curve <- roc(test_data$churn, probs)
+best_threshold <- coords(rocobj, "best", best.method = "youden", 
+                         ret = c("threshold", "specificity", "sensitivity"))
 
-optimal_coords <- coords(roc_curve, "best", ret = c("threshold", "specificity", "sensitivity"), 
-                         best.method = "youden")
+print(best_threshold)
 
+optimal_cut <- best_threshold$threshold
+
+probs_train <- predict(logit_mdl_fu, newdata = train_data, type = "response")
+roc_curve_train <- roc(train_data$churn, probs_train)
+
+optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
 best_threshold <- optimal_coords$threshold
 
 print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
 print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
 print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
 
+probs_test <- predict(logit_mdl_fu, newdata = test_data, type = "response")
+final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
 
-final_preds <- ifelse(probs >= best_threshold, 1, 0)
+table(Tikra = test_data$churn, Prognoze = final_preds_test)
 
-table(Tikra = test_data$churn, Prognoze = final_preds)
+ROC_probit <- roc(test_data$churn, probs_test)
+ROC_probit_auc <- auc(ROC_probit)
 
-ROC_logit_mdl_fu <- roc(test_data$churn, final_preds)
-ROC_logit_mdl_fu_auc <- auc(ROC_logit_mdl_fu)
-
-
-ggroc(ROC_logit_mdl_fu, color = "blue", size = 1.2) +
+ggroc(ROC_probit, color = "blue", size = 1.2) +
   geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(
-    title = paste0("ROC kreivė (AUC = ", round(ROC_logit_mdl_fu_auc, 3), ")"),
-    x = "Specifiškumas (Specificity)",
-    y = "Jautrumas (Sensitivity)"
-  ) +
+  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
+       x = "Specifiškumas (Specificity)",
+       y = "Jautrumas (Sensitivity)") +
   theme_bw()
 ```
 
