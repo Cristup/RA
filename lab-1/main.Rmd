@@ -256,21 +256,21 @@ gg2 <- ggbetweenstats(data = churn_data, x = churn, y = customer_value, plot.typ
                violin.args = list(width = 0)) +
   scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
   scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
-  labs(x = "Atsisakymas", y = "Kliento vertė")
+  labs(x = "Atsisakymas", y = "Kliento svarba")
 
 gg3 <- ggbetweenstats(data = churn_data, x = churn, y = freq_of_SMS, plot.type = "box",
                mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
                violin.args = list(width = 0)) +
   scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
   scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
-  labs(x = "Atsisakymas", y = "Žinučių skaičius")
+  labs(x = "Atsisakymas", y = "SMS dažnumas")
 
 gg4 <- ggbetweenstats(data = churn_data, x = churn, y = distinct_called_numbers , plot.type = "box",
                mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
                violin.args = list(width = 0)) +
   scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
   scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
-  labs(x = "Atsisakymas", y = "Skirtingų skambučių skaičius")
+  labs(x = "Atsisakymas", y = "Skirtingi numeriai")
 
 
 combined_plot <- (gg1 + gg2) / (gg3 + gg4)
@@ -292,7 +292,7 @@ gg1 <- ggbetweenstats(data = churn_data, x = churn, y = call_failure, plot.type 
                violin.args = list(width = 0)) + 
   scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
   scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
-  labs(x = "Atsisakymas", y = "Nepavykusių skambučių skaičius")
+  labs(x = "Atsisakymas", y = "Skambučių sutrikimai")
 
 gg2 <- ggbetweenstats(data = churn_data, x = churn, y = subscription_length, plot.type = "box",
                mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
@@ -306,7 +306,7 @@ gg3 <- ggbetweenstats(data = churn_data, x = churn, y = freq_of_use, plot.type =
                violin.args = list(width = 0)) +
   scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
   scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
-  labs(x = "Atsisakymas", y = "Skambučių skaičius")
+  labs(x = "Atsisakymas", y = "Naudojimo dažnumas")
 
 
 
