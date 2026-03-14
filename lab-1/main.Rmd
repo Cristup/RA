@@ -371,7 +371,7 @@ test_data  <- testing(data_split)
 test_data <- test_data %>% slice_sample(prop = 1)
 ```
 
-## Modeliai
+Sukuriamos funkcijos cook'o mato išskirtims, Pirsono išskirtims
 
 ```{r}
 cook_plot <- function(mdl) {
@@ -392,18 +392,59 @@ pearson_plot <- function(mdl) {
   geom_point(color = "blue", size = 3, alpha = 0.7) +
   labs(
     x = "Eilės numeris", 
-    y = "Pearson likučiai") +
+    y = "Pirsono išskirtys") +
   theme_bw()
 }
-```
 
-### Logit modelis SMOTE
+ROC_plot <- function(mdl, test_data) {
+  prediction <- predict(mdl, test_data, type = "response")
+
+  ROC <- roc(test_data$churn, prediction)
+  ROC_auc <- auc(ROC)
+  
+  ggroc(ROC, color = "blue", size = 1.2) +
+    geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+    labs(
+      title = paste0("ROC kreivė (AUC = ", round(ROC_auc, 3), ")"),
+      x = "Specifiškumas (Specificity)",
+      y = "Jautrumas (Sensitivity)"
+    ) +
+    theme_bw()
+}
+
+ROC_youden_plot <- function(mdl, train_set, test_set) {
+  probs_train <- predict(mdl, newdata = train_set, type = "response")
+  roc_curve_train <- roc(train_set$churn, probs_train)
+  
+  optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
+  best_threshold <- optimal_coords$threshold
+  
+  print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
+  print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
+  print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
+  
+  probs_test <- predict(mdl, newdata = test_set, type = "response")
+  final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
+  
+  print(table(Tikra = test_set$churn, Prognoze = final_preds_test))
+  
+  ROC_probit <- roc(test_set$churn, probs_test)
+  ROC_probit_auc <- auc(ROC_probit)
+  
+  ggroc(ROC_probit, color = "blue", size = 1.2) +
+    geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+    labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
+         x = "Specifiškumas (Specificity)",
+         y = "Jautrumas (Sensitivity)") +
+    theme_bw()
+}
+
+```
+## Logit
+### Logit (SMOTE)
 
 Logit modelis su visais kintamaisiais ir kovariančių multikolinearumas.
 
-```{r}
-table(train_data$churn)
-```
 
 ```{r}
 set.seed(1)
@@ -457,21 +498,7 @@ vif(logit_mdl_smote)
 
 ```{r}
 ClassLog(logit_mdl_smote, smote_data$churn)
-
-logit_smote_prediction <- predict(logit_mdl_smote, test_data, type = "response")
-
-ROC_logit_smote <- roc(test_data$churn, logit_smote_prediction)
-ROC_logit_smote_auc <- auc(ROC_logit_smote)
-
-
-ggroc(ROC_logit_smote, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(
-    title = paste0("ROC kreivė (AUC = ", round(ROC_logit_smote_auc, 3), ")"),
-    x = "Specifiškumas (Specificity)",
-    y = "Jautrumas (Sensitivity)"
-  ) +
-  theme_bw()
+ROC_plot(logit_mdl_smote, test_data)
 ```
 
 2945,2
@@ -490,21 +517,7 @@ summary(logit_mdl_smote_gamma)
 
 ```{r}
 ClassLog(logit_mdl_smote_gamma, smote_data$churn)
-
-logit_mdl_smote_gamma_prediction <- predict(logit_mdl_smote_gamma, test_data, type = "response")
-
-ROC_logit_mdl_smote_gamma <- roc(test_data$churn, logit_mdl_smote_gamma_prediction)
-ROC_logit_mdl_smote_gamma_auc <- auc(ROC_logit_mdl_smote_gamma)
-
-
-ggroc(ROC_logit_mdl_smote_gamma, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(
-    title = paste0("ROC kreivė (AUC = ", round(ROC_logit_mdl_smote_gamma_auc, 3), ")"),
-    x = "Specifiškumas (Specificity)",
-    y = "Jautrumas (Sensitivity)"
-  ) +
-  theme_bw()
+ROC_plot(logit_mdl_smote_gamma, test_data)
 ```
 charge_amount
 sec_of_use
@@ -523,7 +536,7 @@ tariff_plan
 tariff_plan*freq_of_SMS 2941,8
 AUC = 0.91 < 0.921
 
-### Logit modelis Youden
+### Logit (Youden-sec_of_use)
 
 Išmesta: tariff_plan, charge_amount, age_group2
 
@@ -534,44 +547,9 @@ summary(logit_mdl_su)
 vif(logit_mdl_su)
 ```
 
-```{r}
-rocobj <- roc(logit_mdl_su$y, logit_mdl_su$fitted.values)
-
-best_threshold <- coords(rocobj, "best", best.method = "youden", 
-                         ret = c("threshold", "specificity", "sensitivity"))
-
-print(best_threshold)
-
-optimal_cut <- best_threshold$threshold
-```
 
 ```{r}
-probs_train <- predict(logit_mdl_su, newdata = train_data, type = "response")
-roc_curve_train <- roc(train_data$churn, probs_train)
-
-optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
-best_threshold <- optimal_coords$threshold
-
-print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
-print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
-print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
-
-probs_test <- predict(logit_mdl_su, newdata = test_data, type = "response")
-final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
-
-table(Tikra = test_data$churn, Prognoze = final_preds_test)
-```
-
-```{r}
-ROC_probit <- roc(test_data$churn, probs_test)
-ROC_probit_auc <- auc(ROC_probit)
-
-ggroc(ROC_probit, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
-       x = "Specifiškumas (Specificity)",
-       y = "Jautrumas (Sensitivity)") +
-  theme_bw()
+ROC_youden_plot(logit_mdl_su, train_data, test_data)
 ```
 
 1462
@@ -581,6 +559,8 @@ subscription_length:status 1425,2
 AUC = 0.856 < 0.862 => sąveika nepagerino rezultatų
 
 --------------------------------------------------------------------------------
+
+### Logit (Youden-freq_of_use)
 
 Išmesta: charge_amount, tariff_plan, age_group2, distinct_called_numbers
 
@@ -592,15 +572,6 @@ vif(logit_mdl_fu)
 ```
 
 ```{r}
-rocobj <- roc(logit_mdl_fu$y, logit_mdl_fu$fitted.values)
-
-best_threshold <- coords(rocobj, "best", best.method = "youden", 
-                         ret = c("threshold", "specificity", "sensitivity"))
-
-print(best_threshold)
-
-optimal_cut <- best_threshold$threshold
-
 probs_train <- predict(logit_mdl_fu, newdata = train_data, type = "response")
 roc_curve_train <- roc(train_data$churn, probs_train)
 
