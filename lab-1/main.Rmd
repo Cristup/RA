@@ -366,6 +366,7 @@ data_split <- initial_split(churn_data2, prop = 0.8, strata = churn)
 train_data <- training(data_split)
 train_data <- train_data %>% slice_sample(prop = 1)
 test_data  <- testing(data_split)
+test_data <- test_data %>% slice_sample(prop = 1)
 ```
 
 ## Modeliai
@@ -471,6 +472,55 @@ ggroc(ROC_logit_smote, color = "blue", size = 1.2) +
   theme_bw()
 ```
 
+2945,2
+subscription_length:freq_of_SMS 2931,4
+subscription_length:status 2876,9
+subscription_length:age_group2 2819,6
+
+```{r}
+set.seed(1)
+smote_data <- ROSE(churn ~ call_failure + subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + age_group2 + freq_of_use, data = train_data, N = 4200, p = 0.5)$data
+
+logit_mdl_smote_gamma <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + age_group2 + freq_of_use + subscription_length:age_group2, data = smote_data, family = binomial(logit))
+
+summary(logit_mdl_smote_gamma)
+```
+
+```{r}
+ClassLog(logit_mdl_smote_gamma, smote_data$churn)
+
+logit_mdl_smote_gamma_prediction <- predict(logit_mdl_smote_gamma, test_data, type = "response")
+
+ROC_logit_mdl_smote_gamma <- roc(test_data$churn, logit_mdl_smote_gamma_prediction)
+ROC_logit_mdl_smote_gamma_auc <- auc(ROC_logit_mdl_smote_gamma)
+
+
+ggroc(ROC_logit_mdl_smote_gamma, color = "blue", size = 1.2) +
+  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+  labs(
+    title = paste0("ROC kreivė (AUC = ", round(ROC_logit_mdl_smote_gamma_auc, 3), ")"),
+    x = "Specifiškumas (Specificity)",
+    y = "Jautrumas (Sensitivity)"
+  ) +
+  theme_bw()
+```
+charge_amount
+sec_of_use
+tariff_plan
+
+2945,2
+charge_amount*sec_of_use 2916,9
+AUC = 0.907 < 0.921
+
+--------------------------------------------------------------------------------
+charge_amount
+sec_of_use
+tariff_plan
+
+2945,2
+tariff_plan*freq_of_SMS 2941,8
+AUC = 0.91 < 0.921
+
 ### Logit modelis Youden
 
 Išmesta: tariff_plan, charge_amount, age_group2
@@ -515,6 +565,12 @@ ggroc(ROC_logit_mdl_su, color = "blue", size = 1.2) +
   theme_bw()
 ```
 
+1462
+subscription_length:freq_of_SMS 1455,6
+subscription_length:complains 1442,7
+subscription_length:status 1425,2
+AUC = 0.856 < 0.862 => sąveika nepagerino rezultatų
+
 Išmesta: charge_amount, tariff_plan, age_group2, distinct_called_numbers
 
 ```{r freq_of_use}
@@ -523,7 +579,6 @@ logit_mdl_fu <- glm(formula = churn ~ subscription_length + freq_of_use + freq_o
 summary(logit_mdl_fu)
 vif(logit_mdl_fu)
 ```
-
 ```{r}
 probs <- predict(logit_mdl_fu, newdata = test_data, type = "response")
 
@@ -556,6 +611,12 @@ ggroc(ROC_logit_mdl_fu, color = "blue", size = 1.2) +
   ) +
   theme_bw()
 ```
+
+1454,7
+subscription_length:freq_of_SMS 1449,5
+subscription_length:complains 1433,1
+subscription_length:status 1423,6
+AUC lygūs
 
 ### Probit modelis
 
