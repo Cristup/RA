@@ -715,10 +715,18 @@ ggroc(ROC_probit, color = "blue", size = 1.2) +
 
 
 
-### Cloglog modelis
+### Cloglog modelis SMOTE
+
 
 ```{r}
-cloglog_model <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group, family = binomial(link = "cloglog"), data = smote_data)
+set.seed(1234)
+smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group2, data = train_data, N = 4200, p = 0.5)$data
+table(smote_data$churn)
+```
+
+
+```{r}
+cloglog_model <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group2, family = binomial(link = "cloglog"), data = smote_data)
 
 summary(cloglog_model)
 ```
@@ -742,8 +750,13 @@ pearson_plot(cloglog_model)
 COOKS RODO KAD NERA ISSKIRCIU, SITAS RODO KAD DAUG JU
 
 
+Pašalinta age_group2, charge_amount, tariff_plan, sec_of_use
+
 ```{r}
-final_cloglog_model <- glm(formula = churn ~ call_failure + complains + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + status, family = binomial(link = "cloglog"), data = smote_data)
+set.seed(1234)
+smote_data <- ROSE(churn ~ call_failure + subscription_length + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + status, data = train_data, N = 4200, p = 0.5)$data
+
+final_cloglog_model_smote <- glm(formula = churn ~ call_failure + subscription_length + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + status, family = binomial(link = "cloglog"), data = smote_data)
 
 summary(final_cloglog_model)
 ```
@@ -753,13 +766,21 @@ summary(final_cloglog_model)
 Klasifikavimo lentelė
 
 ```{r}
-ClassLog(final_cloglog_model, smote_data$churn)
+ClassLog(final_cloglog_model_smote, smote_data$churn)
 ```
 
-```{r fig.height=4, fig.width=4}
-cloglog_prediction <- predict(cloglog_model, churn_data, type = "response")
+```{r}
+test_probs <- predict(final_cloglog_model_smote, newdata = test_data, type = "response")
 
-ROC_cloglog <- roc(churn_data$churn, cloglog_prediction)
+test_preds <- ifelse(test_probs > 0.5, 1, 0)
+table(test_preds, test_data$churn)
+```
+
+
+```{r fig.height=4, fig.width=4}
+cloglog_prediction <- predict(final_cloglog_model_smote, smote_data, type = "response")
+
+ROC_cloglog <- roc(smote_data$churn, cloglog_prediction)
 ROC_cloglog_auc <- auc(ROC_cloglog)
 
 
@@ -773,16 +794,36 @@ ggroc(ROC_cloglog, color = "blue", size = 1.2) +
   theme_bw()
 ```
 
+```{r fig.height=4, fig.width=4}
+cloglog_prediction <- predict(final_cloglog_model_smote, newdata = test_data, type = "response")
 
+ROC_cloglog <- roc(test_data$churn, cloglog_prediction)
+ROC_cloglog_auc <- auc(ROC_cloglog)
+
+
+ggroc(ROC_cloglog, color = "blue", size = 1.2) +
+  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+  labs(
+    title = paste0("ROC kreivė (AUC = ", round(ROC_cloglog_auc, 3), ")"),
+    x = "Specifiškumas (Specificity)",
+    y = "Jautrumas (Sensitivity)"
+  ) +
+  theme_bw()
+```
+
+### Cloglog modelis Youden
+
+Išmesta charge_amount, distinct_called_numbers, age_group2
 
 ```{r}
-cloglog_model <- glm(formula = churn ~ call_failure + complains + subscription_length + 
-                       charge_amount + sec_of_use + freq_of_use + freq_of_SMS + 
-                       distinct_called_numbers + tariff_plan + status + age_group, 
-                     family = binomial(link = "cloglog"), 
-                     data = churn_data2)
+cloglog_model_youden <- glm(formula = churn ~ call_failure + complains + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + tariff_plan + status, family = binomial(link = "cloglog"), data = train_data)
+summary(cloglog_model_youden)
+vif(cloglog_model_youden)
+```
+MULITKOLINEARUUMO PROBLEMA
 
-probs <- predict(cloglog_model, type = "response")
+```{r}
+probs <- predict(cloglog_model_youden, type = "response")
 
 roc_curve <- roc(churn_data2$churn, probs)
 
@@ -802,5 +843,50 @@ table(Tikra = churn_data2$churn, Prognoze = final_preds)
 ```
 
 
+### Cloglog modelis ant orginalių duomenų
+
+```{r}
+cloglog_model_original <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group2, family = binomial(link = "cloglog"), data = train_data)
+
+summary(cloglog_model_original)
+```
+
+Išskirtys
+
+```{r}
+cook_plot(cloglog_model_original)
+```
+
+
+```{r}
+pearson_plot(cloglog_model_original)
+```
+
+
+Multikolinearumas
+
+```{r}
+vif(cloglog_model_original)
+```
+
+Multikolineraumas tarp freq_of_use ir sec_of_use. Skaidome į modelius pretendentus
+
+Modelis su freq_of_use: išmesta charge_amount, distinct_called_numbers, age_group2, tariff_plan
+
+```{r}
+cloglog_model_original_freq_of_use  <- glm(formula = churn ~ call_failure + complains + subscription_length + freq_of_use + freq_of_SMS + status, family = binomial(link = "cloglog"), data = train_data)
+
+summary(cloglog_model_original_freq_of_use)
+# vif(cloglog_model_original_freq_of_use) pradinio modelio vifai geri
+```
+
+Modelis su sec_of_use: išmesta charge_amount, age_group2, tariff_plan
+
+```{r}
+cloglog_model_original_sec_of_use <- glm(formula = churn ~ call_failure + complains + subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + status, family = binomial(link = "cloglog"), data = train_data)
+
+summary(cloglog_model_original_sec_of_use)
+#vif(cloglog_model_original_sec_of_use)viskas gerai su pradinio modelio vifais
+```
 
 
