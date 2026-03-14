@@ -612,20 +612,14 @@ subscription_length:complains 1433,1
 subscription_length:status 1423,6
 AUC lygūs
 
+
+
 ### Probit modelis
 
 Balansavimas naudojantis SMOTE
 
 ```{r}
-set.seed(1)
-smote_data <- ROSE(churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + 
-                     freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group,
-                   data = train_data, N = 4200, p = 0.5)$data
-table(smote_data$churn)
-```
-
-```{r}
-probit_model <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group, data = smote_data, family = binomial(link = "probit"))
+probit_model <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2, data = balanced_churn, family = binomial(link = "probit"))
 
 summary(probit_model)
 ```
@@ -635,7 +629,6 @@ Multikolinearumas
 ```{r}
 vif(probit_model)
 ```
-
 Išskirtys
 
 ```{r}
@@ -643,22 +636,94 @@ cook_plot(probit_model)
 pearson_plot(probit_model)
 outlierTest(probit_model)
 ```
+```{r}
+balanced_churn[1676, ]
+```
 
-Iš pirmojo probit modelio išmestas nereikšminga kovariantė - *age_group*.
+
+Multikolinearumo sprendimas - Modeliai pretendentai:
+
+Modelis su kovariante *sec_of_use*:
 
 ```{r}
-probit_model2 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status, data = smote_data, family = binomial(link = "probit"))
+probit_model1 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2, data = balanced_churn, family = binomial(link = "probit"))
+
+summary(probit_model1)
+```
+Modelis su kovariante *freq_of_use*:
+
+```{r}
+probit_model2 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + freq_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2, data = balanced_churn, family = binomial(link = "probit"))
 
 summary(probit_model2)
+```
+
+AIC ir BIC:
+
+```{r}
+AIC(probit_model1, probit_model2)
+BIC(probit_model1, probit_model2)
+```
+
+Mažiausias reikšmes įgyja antras modelis *probit_model2* su kovariante *freq_of_use*.
+
+```{r}
+ClassLog(probit_model2, balanced_churn$churn)
+```
+
+```{r}
+probs_test <- predict(probit_model2, newdata = test_data, type = "response")
+
+ROC_probit <- roc(test_data$churn, probs_test)
+ROC_probit_auc <- auc(ROC_probit)
+
+ggroc(ROC_probit, color = "blue", size = 1.2) +
+  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
+       x = "Specifiškumas (Specificity)",
+       y = "Jautrumas (Sensitivity)") +
+  theme_bw()
+```
+
+
+
+Modelis su sąveika:
+
+Modelis be sąveikos                AIC -> 2514,8
+call_failure:complains             AIC -> 2508,6 - SĄVEIKA REIKŠMINGA
+charge_amount:freq_of_use          AIC -> 2491,5 - SĄVEIKA DALINAI REIKŠMINGA
+call_failure:subscription_length   AIC -> 2503,3 išsimeta: *call_failure*, *charge_amount* AIC -> 2545,5
+
+```{r}
+probit_model2_interaction <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + freq_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2 + call_failure:complains, data = balanced_churn, family = binomial(link = "probit"))
+
+summary(probit_model2_interaction) 
+```
+```{r}
+ClassLog(probit_model2_interaction, balanced_churn$churn)
+```
+
+```{r}
+probs_test <- predict(probit_model2_interaction, newdata = test_data, type = "response")
+
+ROC_probit <- roc(test_data$churn, probs_test)
+ROC_probit_auc <- auc(ROC_probit)
+
+ggroc(ROC_probit, color = "blue", size = 1.2) +
+  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
+       x = "Specifiškumas (Specificity)",
+       y = "Jautrumas (Sensitivity)") +
+  theme_bw()
 ```
 
 
 Balansavimas naudojantis slenksčiu ir Youden indeksu
 
 ```{r}
-probit_model3 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group, data = train_data, family = binomial(link = "probit"))
+probit_model3 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2, data = train_data, family = binomial(link = "probit"))
 
-summary(probit_model)
+summary(probit_model3)
 ```
 
 Multikolinearumas
@@ -666,9 +731,54 @@ Multikolinearumas
 ```{r}
 vif(probit_model3)
 ```
+Išskirtys
 
 ```{r}
-probs_train <- predict(probit_model2, newdata = train_data, type = "response")
+cook_plot(probit_model3)
+pearson_plot(probit_model3)
+outlierTest(probit_model3)
+```
+
+```{r}
+train_data[464, ]
+```
+
+
+Multikolinearumo sprendimas - Modeliai pretendentai:
+
+Modelis su kovariante *sec_of_use*:
+
+Išmesta: *charge_amount*, *age_group2*
+
+```{r}
+probit_model31 <- glm(formula = churn ~ call_failure + complains + subscription_length + sec_of_use + freq_of_SMS + distinct_called_numbers + status, 
+                      data = train_data, family = binomial(link = "probit"))
+
+summary(probit_model31)
+```
+
+Modelis su kovariante *freq_of_use*:
+
+Išmesta: *charge_amount*, *age_group2*
+
+```{r}
+probit_model32 <- glm(formula = churn ~ call_failure + complains + subscription_length + freq_of_use + freq_of_SMS + distinct_called_numbers + status,
+                      data = train_data, family = binomial(link = "probit"))
+
+summary(probit_model32)
+```
+AIC ir BIC:
+
+```{r}
+AIC(probit_model31, probit_model32)
+BIC(probit_model31, probit_model32)
+```
+
+Antras modelis (*probit_model32*) įgyja mažesnes reikšmes
+
+
+```{r}
+probs_train <- predict(probit_model32, newdata = train_data, type = "response")
 roc_curve_train <- roc(train_data$churn, probs_train)
 
 optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
@@ -678,10 +788,14 @@ print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold,
 print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
 print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
 
-probs_test <- predict(probit_model2, newdata = test_data, type = "response")
+probs_test <- predict(probit_model32, newdata = test_data, type = "response")
 final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
 
-table(Tikra = test_data$churn, Prognoze = final_preds_test)
+confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
+confusion_matrix
+
+confusion_pct <- prop.table(confusion_matrix, 1)
+round(confusion_pct, 2)
 ```
 
 ```{r}
@@ -695,6 +809,60 @@ ggroc(ROC_probit, color = "blue", size = 1.2) +
        y = "Jautrumas (Sensitivity)") +
   theme_bw()
 ```
+AIC ir BIC:
+
+```{r}
+AIC(probit_model2, probit_model32)
+BIC(probit_model2, probit_model32)
+```
+
+Modelis su sąveika:
+
+Modelis be sąveikos                AIC -> 1106,6
+call_failure:complains             AIC -> 1103,7 SĄVEIKA REIKŠMINGA
+charge_amount:freq_of_use          AIC -> SĄVEIKA NEREIKŠMINGA
+call_failure:subscription_length   AIC -> SĄVEIKA NEREIKŠMINGA
+
+
+```{r}
+probit_model32_interaction <- glm(formula = churn ~ call_failure + complains + subscription_length + freq_of_use + freq_of_SMS + distinct_called_numbers + status + call_failure:complains, data = train_data, family = binomial(link = "probit"))
+
+summary(probit_model32_interaction)
+```
+
+```{r}
+probs_train <- predict(probit_model32_interaction, newdata = train_data, type = "response")
+roc_curve_train <- roc(train_data$churn, probs_train)
+
+optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
+best_threshold <- optimal_coords$threshold
+
+print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
+print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
+print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
+
+probs_test <- predict(probit_model32_interaction, newdata = test_data, type = "response")
+final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
+
+confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
+confusion_matrix
+
+confusion_pct <- prop.table(confusion_matrix, 1)
+round(confusion_pct, 2)
+```
+
+```{r}
+ROC_probit <- roc(test_data$churn, probs_test)
+ROC_probit_auc <- auc(ROC_probit)
+
+ggroc(ROC_probit, color = "blue", size = 1.2) +
+  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
+       x = "Specifiškumas (Specificity)",
+       y = "Jautrumas (Sensitivity)") +
+  theme_bw()
+```
+
 
 
 
