@@ -658,7 +658,7 @@ outlierTest(logit_mdl_fu)
 ## Probit
 ### Probit modelis
 
-Balansavimas naudojantis SMOTE
+### Balansavimas naudojantis SMOTE
 
 ```{r}
 probit_model <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2, data = balanced_churn, family = binomial(link = "probit"))
@@ -710,7 +710,7 @@ BIC(probit_model1, probit_model2)
 Mažiausias reikšmes įgyja antras modelis *probit_model2* su kovariante *freq_of_use*.
 
 ```{r}
-ClassLog(probit_model2, balanced_churn$churn)
+confusion_test(probit_model2, test_data)
 ```
 
 ```{r}
@@ -730,7 +730,7 @@ probit_model2_interaction <- glm(formula = churn ~ call_failure + complains + su
 summary(probit_model2_interaction) 
 ```
 ```{r}
-ClassLog(probit_model2_interaction, balanced_churn$churn)
+confusion_test(probit_model2_interaction, test_data)
 ```
 
 ```{r}
@@ -738,7 +738,7 @@ ROC_plot(probit_model2_interaction, test_data)
 ```
 
 
-Balansavimas naudojantis slenksčiu ir Youden indeksu
+### Balansavimas naudojantis slenksčiu ir Youden indeksu
 
 ```{r}
 probit_model3 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2, data = train_data, family = binomial(link = "probit"))
@@ -797,45 +797,10 @@ BIC(probit_model31, probit_model32)
 
 Antras modelis (*probit_model32*) įgyja mažesnes reikšmes
 
-
 ```{r}
-probs_train <- predict(probit_model32, newdata = train_data, type = "response")
-roc_curve_train <- roc(train_data$churn, probs_train)
-
-optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
-best_threshold <- optimal_coords$threshold
-
-print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
-print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
-print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
-
-probs_test <- predict(probit_model32, newdata = test_data, type = "response")
-final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
-
-confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
-confusion_matrix
-
-confusion_pct <- prop.table(confusion_matrix, 1)
-round(confusion_pct, 2)
+ROC_youden_plot(probit_model32, train_data, test_data)
 ```
 
-```{r}
-ROC_probit <- roc(test_data$churn, probs_test)
-ROC_probit_auc <- auc(ROC_probit)
-
-ggroc(ROC_probit, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
-       x = "Specifiškumas (Specificity)",
-       y = "Jautrumas (Sensitivity)") +
-  theme_bw()
-```
-AIC ir BIC:
-
-```{r}
-AIC(probit_model2, probit_model32)
-BIC(probit_model2, probit_model32)
-```
 
 Modelis su sąveika:
 
@@ -850,40 +815,9 @@ probit_model32_interaction <- glm(formula = churn ~ call_failure + complains + s
 
 summary(probit_model32_interaction)
 ```
-
 ```{r}
-probs_train <- predict(probit_model32_interaction, newdata = train_data, type = "response")
-roc_curve_train <- roc(train_data$churn, probs_train)
-
-optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
-best_threshold <- optimal_coords$threshold
-
-print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
-print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
-print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
-
-probs_test <- predict(probit_model32_interaction, newdata = test_data, type = "response")
-final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
-
-confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
-confusion_matrix
-
-confusion_pct <- prop.table(confusion_matrix, 1)
-round(confusion_pct, 2)
+ROC_youden_plot(probit_model32_interaction, train_data, test_data)
 ```
-
-```{r}
-ROC_probit <- roc(test_data$churn, probs_test)
-ROC_probit_auc <- auc(ROC_probit)
-
-ggroc(ROC_probit, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
-       x = "Specifiškumas (Specificity)",
-       y = "Jautrumas (Sensitivity)") +
-  theme_bw()
-```
-
 
 
 
