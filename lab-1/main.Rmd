@@ -265,6 +265,7 @@ gg4 <- ggbetweenstats(data = churn_data, x = churn, y = distinct_called_numbers 
 
 ## Kokybinių kintamųjų analizė
 
+
 ```{r}
 kategoriniai_kintamieji <- names(churn_data)[sapply(churn_data, function(x) !is.numeric(x))]
 kategoriniai_kintamieji <- setdiff(kategoriniai_kintamieji, "churn")
@@ -277,6 +278,7 @@ for (kintamasis in kategoriniai_kintamieji) {
 }
 ```
 
+Į modelį netrauksime tariff_plan 
 
 ## Koreliacijos
 
@@ -340,7 +342,7 @@ churn_data2 <- churn_data %>%
 ```
 
 ```{r}
-churn_data2$age_group2 <- ifelse(churn_data2$age_group %in% c("1","2","3"), "1-3", "4-5")
+churn_data2$age_group2 <- ifelse(churn_data2$age_group %in% c("1","2"), "1-2", "3-5")
 churn_data2$age_group2 <- as.factor(churn_data2$age_group2)
 table(churn_data2$age_group2, churn_data2$churn)
 ```
@@ -823,23 +825,23 @@ vif(cloglog_model_youden)
 MULITKOLINEARUUMO PROBLEMA
 
 ```{r}
-probs <- predict(cloglog_model_youden, type = "response")
+#probs <- predict(cloglog_model_youden, type = "response")
 
-roc_curve <- roc(churn_data2$churn, probs)
+#roc_curve <- roc(churn_data2$churn, probs)
 
-optimal_coords <- coords(roc_curve, "best", ret = c("threshold", "specificity", "sensitivity"), 
-                         best.method = "youden")
+#optimal_coords <- coords(roc_curve, "best", ret = c("threshold", "specificity", "sensitivity"), 
+#                         best.method = "youden")
 
-best_threshold <- optimal_coords$threshold
+#best_threshold <- optimal_coords$threshold
 
-print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
-print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
-print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
+#print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
+#print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
+#print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
 
 
-final_preds <- ifelse(probs >= best_threshold, 1, 0)
+#final_preds <- ifelse(probs >= best_threshold, 1, 0)
 
-table(Tikra = churn_data2$churn, Prognoze = final_preds)
+#table(Tikra = churn_data2$churn, Prognoze = final_preds)
 ```
 
 
