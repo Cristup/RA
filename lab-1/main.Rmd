@@ -701,49 +701,8 @@ ClassLog(probit_model2, balanced_churn$churn)
 ```
 
 ```{r}
-probs_test <- predict(probit_model2, newdata = test_data, type = "response")
-
-ROC_probit <- roc(test_data$churn, probs_test)
-ROC_probit_auc <- auc(ROC_probit)
-
-ggroc(ROC_probit, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
-       x = "Specifiškumas (Specificity)",
-       y = "Jautrumas (Sensitivity)") +
-  theme_bw()
+ROC_plot(probit_model2, test_data)
 ```
-Išskirčių šalinimas
-
-```{r}
-cook_plot(probit_model2)
-pearson_plot(probit_model2)
-outlierTest(probit_model2)
-```
-
-```{r}
-probit_model2_out <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + freq_of_use + freq_of_SMS + distinct_called_numbers + status + age_group2, data = balanced_churn[-1676, ], family = binomial(link = "probit"))
-
-summary(probit_model2_out)
-```
-
-```{r}
-ClassLog(probit_model2_out, balanced_churn[-1676, ]$churn)
-```
-```{r}
-probs_test <- predict(probit_model2_out, newdata = test_data, type = "response")
-
-ROC_probit <- roc(test_data$churn, probs_test)
-ROC_probit_auc <- auc(ROC_probit)
-
-ggroc(ROC_probit, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
-       x = "Specifiškumas (Specificity)",
-       y = "Jautrumas (Sensitivity)") +
-  theme_bw()
-```
-
 
 Modelis su sąveika:
 
@@ -762,17 +721,7 @@ ClassLog(probit_model2_interaction, balanced_churn$churn)
 ```
 
 ```{r}
-probs_test <- predict(probit_model2_interaction, newdata = test_data, type = "response")
-
-ROC_probit <- roc(test_data$churn, probs_test)
-ROC_probit_auc <- auc(ROC_probit)
-
-ggroc(ROC_probit, color = "blue", size = 1.2) +
-  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
-  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
-       x = "Specifiškumas (Specificity)",
-       y = "Jautrumas (Sensitivity)") +
-  theme_bw()
+ROC_plot(probit_model2_interaction, test_data)
 ```
 
 
