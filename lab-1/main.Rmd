@@ -242,24 +242,81 @@ churn_data %>%
        x = "Pasirinkimas (0 = Neatsisakė, 1 = Atsisakė)", y = NULL)
 ```
 
-```{r fig.height=6, fig.width=12}
+```{r fig.height=6, fig.width=12, message=FALSE, warning=FALSE}
+
 gg1 <- ggbetweenstats(data = churn_data, x = churn, y = sec_of_use, plot.type = "box",
-               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE) +
-  labs(x = "Pasirinkimas", y = "Naudojimo trukmė (s)")
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
+               violin.args = list(width = 0)) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  labs(x = "Atsisakymas", y = "Naudojimo trukmė (s)")
 
 gg2 <- ggbetweenstats(data = churn_data, x = churn, y = customer_value, plot.type = "box",
-               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE) +
-  labs(x = "Pasirinkimas", y = "Kliento vertė")
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
+               violin.args = list(width = 0)) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  labs(x = "Atsisakymas", y = "Kliento vertė")
 
 gg3 <- ggbetweenstats(data = churn_data, x = churn, y = freq_of_SMS, plot.type = "box",
-               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE) +
-  labs(x = "Pasirinkimas", y = "Žinučių skaičius")
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
+               violin.args = list(width = 0)) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  labs(x = "Atsisakymas", y = "Žinučių skaičius")
 
 gg4 <- ggbetweenstats(data = churn_data, x = churn, y = distinct_called_numbers , plot.type = "box",
-               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE) +
-  labs(x = "Pasirinkimas", y = "Skirtingų skambučių skaičius")
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
+               violin.args = list(width = 0)) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  labs(x = "Atsisakymas", y = "Skirtingų skambučių skaičius")
 
-(gg1 + gg2) / (gg3 + gg4)
+
+combined_plot <- (gg1 + gg2) / (gg3 + gg4)
+
+combined_plot + plot_annotation(
+  title = "Klientų skaitinių rodiklių pasiskirstymas pagal atsisakymą",
+  theme = theme(plot.title = element_text(size = 14))) &
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title.x = element_text(size = 13),
+        axis.title.y = element_text(size = 13))
+
+```
+
+
+```{r fig.height=5, fig.width=12, message=FALSE, warning=FALSE}
+gg1 <- ggbetweenstats(data = churn_data, x = churn, y = call_failure, plot.type = "box",
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
+               violin.args = list(width = 0)) + 
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  labs(x = "Atsisakymas", y = "Nepavykusių skambučių skaičius")
+
+gg2 <- ggbetweenstats(data = churn_data, x = churn, y = subscription_length, plot.type = "box",
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
+               violin.args = list(width = 0)) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  labs(x = "Atsisakymas", y = "Abonimento trukmė")
+
+gg3 <- ggbetweenstats(data = churn_data, x = churn, y = freq_of_use, plot.type = "box",
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE,
+               violin.args = list(width = 0)) +
+  scale_color_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  scale_fill_manual(values = c("0" = "#00BFC4", "1" = "#F8766D")) +
+  labs(x = "Atsisakymas", y = "Skambučių skaičius")
+
+
+
+(gg1 + gg2 + gg3) + plot_annotation(
+  title = "Klientų skaitinių rodiklių pasiskirstymas pagal atsisakymą",
+  theme = theme(plot.title = element_text(size = 14))) &
+  theme(axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.title.x = element_text(size = 13),
+        axis.title.y = element_text(size = 13))
 
 ```
 
