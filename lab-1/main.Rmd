@@ -671,17 +671,19 @@ probit_model2 <- glm(formula = churn ~ call_failure + complains + subscription_l
 summary(probit_model2)
 ```
 
+
 Balansavimas naudojantis slenksčiu ir Youden indeksu
 
 ```{r}
-rocobj <- roc(probit_model2$y, probit_model2$fitted.values)
+probit_model3 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group, data = train_data, family = binomial(link = "probit"))
 
-best_threshold <- coords(rocobj, "best", best.method = "youden", 
-                         ret = c("threshold", "specificity", "sensitivity"))
+summary(probit_model)
+```
 
-print(best_threshold)
+Multikolinearumas
 
-optimal_cut <- best_threshold$threshold
+```{r}
+vif(probit_model3)
 ```
 
 ```{r}
