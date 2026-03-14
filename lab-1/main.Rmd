@@ -13,6 +13,8 @@ library(car)
 library(rsample)
 library(boot)
 library(ROSE)
+library(ggstatsplot)
+library(ggplot2)
 ```
 
 # Duoemnų paruošimas
@@ -235,6 +237,27 @@ churn_data %>%
   theme(legend.position = "none") +
   labs(title = "Skaitinių kintamųjų pasiskirstymas pagal pasirinkimą",
        x = "Pasirinkimas (0 = Neatsisakė, 1 = Atsisakė)", y = NULL)
+```
+
+```{r fig.height=6, fig.width=12}
+gg1 <- ggbetweenstats(data = churn_data, x = churn, y = sec_of_use, plot.type = "box",
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE) +
+  labs(x = "Pasirinkimas", y = "Naudojimo trukmė (s)")
+
+gg2 <- ggbetweenstats(data = churn_data, x = churn, y = customer_value, plot.type = "box",
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE) +
+  labs(x = "Pasirinkimas", y = "Kliento vertė")
+
+gg3 <- ggbetweenstats(data = churn_data, x = churn, y = freq_of_SMS, plot.type = "box",
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE) +
+  labs(x = "Pasirinkimas", y = "Žinučių skaičius")
+
+gg4 <- ggbetweenstats(data = churn_data, x = churn, y = distinct_called_numbers , plot.type = "box",
+               mean.plotting=FALSE, centrality.plotting = FALSE, results.subtitle=FALSE) +
+  labs(x = "Pasirinkimas", y = "Skirtingų skambučių skaičius")
+
+(gg1 + gg2) / (gg3 + gg4)
+
 ```
 
 
