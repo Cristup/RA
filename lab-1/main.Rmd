@@ -12,7 +12,10 @@ library(GGally)
 library(car)
 library(rsample)
 library(boot)
-library(ROSE)
+library(ROSE); library(smotefamily)
+library(tidymodels)
+library(themis)
+
 library(ggstatsplot)
 library(ggplot2)
 library(QuantPsyc)
@@ -371,7 +374,7 @@ test_data  <- testing(data_split)
 test_data <- test_data %>% slice_sample(prop = 1)
 ```
 
-Sukuriamos funkcijos cook'o mato išskirtims, Pirsono išskirtims
+Sukuriamos funkcijos cook'o mato išskirtims, Pirsono išskirtims bei ROC kreivėms su klasifikavimo lentelėmis.
 
 ```{r}
 cook_plot <- function(mdl) {
@@ -440,19 +443,25 @@ ROC_youden_plot <- function(mdl, train_set, test_set) {
 }
 
 ```
+
+```{r}
+smote_recipe <- recipe(churn ~., data = train_data) %>% 
+  step_smotenc(churn, over_ratio = 1.0)
+
+trained_recipe <- prep(smote_recipe)
+balanced_churn <- juice(trained_recipe)
+```
+
 ## Logit
 ### Logit (SMOTE)
 
 Logit modelis su visais kintamaisiais ir kovariančių multikolinearumas.
 
-
 ```{r}
 set.seed(1)
-smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group2, data = train_data, N = 4200, p = 0.5)$data
+smote_data <- ROSE(churn ~ call_failure + subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2, data = train_data, N = 4200, p = 0.5)$data
 table(smote_data$churn)
 ```
-
-
 
 ```{r}
 kategoriniai_kintamieji2 <- names(smote_data)[sapply(smote_data, function(x) !is.numeric(x))]
@@ -469,7 +478,7 @@ for (kintamasis in kategoriniai_kintamieji2) {
 
 
 ```{r initial logit}
-logit_mdl <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + tariff_plan + status + charge_amount + age_group2, data = smote_data, family = binomial(logit))
+logit_mdl <- glm(formula = churn ~ subscription_length + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + complains + + status + charge_amount + age_group2, data = smote_data, family = binomial(logit))
 
 summary(logit_mdl)
 vif(logit_mdl)
