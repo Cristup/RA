@@ -620,6 +620,16 @@ AUC lygūs
 
 ### Probit modelis
 
+Balansavimas naudojantis SMOTE
+
+```{r}
+set.seed(1)
+smote_data <- ROSE(churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + 
+                     freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group,
+                   data = train_data, N = 4200, p = 0.5)$data
+table(smote_data$churn)
+```
+
 ```{r}
 probit_model <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status + age_group, data = smote_data, family = binomial(link = "probit"))
 
@@ -631,19 +641,63 @@ Multikolinearumas
 ```{r}
 vif(probit_model)
 ```
+
 Išskirtys
 
 ```{r}
 cook_plot(probit_model)
-```
-```{r}
 pearson_plot(probit_model)
+outlierTest(probit_model)
 ```
+
+Iš pirmojo probit modelio išmestas nereikšminga kovariantė - *age_group*.
 
 ```{r}
 probit_model2 <- glm(formula = churn ~ call_failure + complains + subscription_length + charge_amount + sec_of_use + freq_of_use + freq_of_SMS + distinct_called_numbers + tariff_plan + status, data = smote_data, family = binomial(link = "probit"))
 
 summary(probit_model2)
+```
+
+Balansavimas naudojantis slenksčiu ir Youden indeksu
+
+```{r}
+rocobj <- roc(probit_model2$y, probit_model2$fitted.values)
+
+best_threshold <- coords(rocobj, "best", best.method = "youden", 
+                         ret = c("threshold", "specificity", "sensitivity"))
+
+print(best_threshold)
+
+optimal_cut <- best_threshold$threshold
+```
+
+```{r}
+probs_train <- predict(probit_model2, newdata = train_data, type = "response")
+roc_curve_train <- roc(train_data$churn, probs_train)
+
+optimal_coords <- coords(roc_curve_train, "best", ret = c("threshold", "specificity", "sensitivity"), best.method = "youden")
+best_threshold <- optimal_coords$threshold
+
+print(paste("Optimalus slenkstis pagal Youdeno indeksą:", round(best_threshold, 4)))
+print(paste("Jautrumas (Sensitivity):", round(optimal_coords$sensitivity, 4)))
+print(paste("Specifiškumas (Specificity):", round(optimal_coords$specificity, 4)))
+
+probs_test <- predict(probit_model2, newdata = test_data, type = "response")
+final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
+
+table(Tikra = test_data$churn, Prognoze = final_preds_test)
+```
+
+```{r}
+ROC_probit <- roc(test_data$churn, probs_test)
+ROC_probit_auc <- auc(ROC_probit)
+
+ggroc(ROC_probit, color = "blue", size = 1.2) +
+  geom_abline(slope = 1, intercept = 1, linetype = "dashed", color = "red") +
+  labs(title = paste0("ROC kreivė (AUC = ", round(ROC_probit_auc, 3), ")"),
+       x = "Specifiškumas (Specificity)",
+       y = "Jautrumas (Sensitivity)") +
+  theme_bw()
 ```
 
 
