@@ -492,7 +492,7 @@ ROC_youden_plot <- function(mdl, train_set, test_set) {
   confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
   print(confusion_matrix)
   
-  confusion_pct <- prop.table(confusion_matrix, 1)
+  confusion_pct <- prop.table(confusion_matrix, 2)
   print(round(confusion_pct, 2))
   
   ROC_probit <- roc(test_set$churn, probs_test)
