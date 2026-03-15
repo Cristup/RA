@@ -1009,6 +1009,13 @@ ame_by_group <- margins(cloglog_model_original_multi, at = list(status = c("1", 
 summary(ame_by_group)
 ```
 
+```{r}
+coef(cloglog_model_original_multi)
+confint.default(cloglog_model_original_multi, level=0.95)
+```
+
+
+
 ### Cloglog modelis Youden
 
 ```{r}
