@@ -516,6 +516,9 @@ confusion_test <- function(mdl, test_set) {
   confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
   print(confusion_matrix)
   
+  accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+  print(paste("Bendras tikslumas (Accuracy):", round(accuracy, 4)))
+  
   confusion_pct <- prop.table(confusion_matrix, 2)
   print(round(confusion_pct, 2))
 }
