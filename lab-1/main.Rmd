@@ -993,10 +993,21 @@ vif(cloglog_model_original_multi) #pradinio modelio vifai geri
 
 ```{r fig.height=2.5, fig.width=3}
 ClassLog(cloglog_model_original_multi, train_data$churn)
+confusion_test(cloglog_model_original_multi, test_data)
 ROC_plot(cloglog_model_original_multi, test_data)
 #ggsave(filename = "cloglog_roc.png", width = 3, height = 2.5, units = "in", dpi = 300)
 ```
 
+```{r}
+library(margins)
+
+ame_effects <- margins(cloglog_model_original_multi)
+
+summary(ame_effects)
+
+ame_by_group <- margins(cloglog_model_original_multi, at = list(status = c("1", "2")))
+summary(ame_by_group)
+```
 
 ### Cloglog modelis Youden
 
