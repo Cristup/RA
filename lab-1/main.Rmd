@@ -508,7 +508,7 @@ ROC_youden_plot <- function(mdl, train_set, test_set) {
 
 confusion_test <- function(mdl, test_set) {
   probs_test <- predict(mdl, newdata = test_set, type = "response")
-  final_preds_test <- ifelse(probs_test >= best_threshold, 1, 0)
+  final_preds_test <- ifelse(probs_test >= 0.5, 1, 0)
   
   confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
   print(confusion_matrix)
@@ -592,10 +592,11 @@ logit_mdl_smote_gamma <- glm(formula = churn ~ subscription_length + freq_of_SMS
 summary(logit_mdl_smote_gamma)
 ```
 
-```{r}
-#ClassLog(logit_mdl_smote_gamma, balanced_churn$churn)
+```{r fig.height=2.5, fig.width=3}
+ClassLog(logit_mdl_smote_gamma, balanced_churn$churn)
 confusion_test(logit_mdl_smote_gamma, test_data)
 ROC_plot(logit_mdl_smote_gamma, test_data)
+#ggsave(filename = "logit_roc.png", width = 3, height = 2.5, units = "in", dpi = 300)
 ```
 
 ```{r fig.height=3, fig.width=8.7}
@@ -687,6 +688,7 @@ summary(logit_mdl_fu)
 ```
 
 ```{r}
+ClassLog(logit_mdl_fu, train_data$churn)
 ROC_youden_plot(logit_mdl_fu, train_data, test_data)
 ```
 
