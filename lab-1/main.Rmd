@@ -441,10 +441,10 @@ cook_plot <- function(mdl) {
   ggplot(
   data.frame(cooks = cooks.distance(mdl)),
   aes(x = seq_along(cooks), y = cooks)) +
-  geom_point(color = "blue", size = 3, alpha = 0.7) +
+  geom_point(color = "blue", size = 1.5, alpha = 0.6) +
   labs(
     x = "Eilės numeris",
-    y = "Cook mato atstumas") +
+    y = "Kuko mato atstumas") +
   theme_bw()
 }
 
@@ -452,7 +452,7 @@ pearson_plot <- function(mdl) {
   ggplot(
   data.frame(pearson = glm.diag(mdl)$rp), 
   aes(x = seq_along(pearson), y = pearson)) +
-  geom_point(color = "blue", size = 3, alpha = 0.7) +
+  geom_point(color = "blue", size = 1.5, alpha = 0.6) +
   labs(
     x = "Eilės numeris", 
     y = "Pirsono išskirtys") +
@@ -553,9 +553,13 @@ vif(logit_mdl)
 
 Logit modelio išskirtys
 
-```{r fig.height=3, fig.width=8.7}
-cook_plot(logit_mdl) +
-pearson_plot(logit_mdl)
+```{r fig.height=2.5, fig.width=6.7}
+cook_plot(logit_mdl) + 
+  pearson_plot(logit_mdl) + 
+  plot_annotation(
+    title = "Logit modelio liekanos",
+    theme = theme(plot.title = element_text(size = 14)))
+#ggsave(filename = "Isskirtys_logit.png", width = 6.7, height = 2.5, units = "in", dpi = 300)
 outlierTest(logit_mdl)
 ```
 ### Logit (SMOTE)
@@ -736,15 +740,15 @@ vif(probit_model)
 
 Išskirtys
 
-```{r}
+```{r fig.height=2.5, fig.width=6.7}
 cook_plot(probit_model) + 
   pearson_plot(probit_model) + 
   plot_annotation( 
     title = "Probit modelio Kuko atstumai ir Pirsono liekanos",
-    theme = theme(plot.title = element_text(size = 16)))
+    theme = theme(plot.title = element_text(size = 14)))
 outlierTest(probit_model)
 
-#ggsave(filename = "Isskirtys_probit_1.png", width = 8, height = 3, units = "in", dpi = 300)
+#ggsave(filename = "Isskirtys_probit_1.png", width = 6.7, height = 2.5, units = "in", dpi = 300)
 ```
 
 ```{r}
@@ -827,15 +831,15 @@ vif(probit_model3)
 
 Išskirtys
 
-```{r}
+```{r fig.height=2.5, fig.width=6.7}
 cook_plot(probit_model3) + 
   pearson_plot(probit_model3) + 
   plot_annotation( 
     title = "Probit modelio Kuko atstumai ir Pirsono liekanos",
-    theme = theme(plot.title = element_text(size = 16)))
+    theme = theme(plot.title = element_text(size = 14)))
 outlierTest(probit_model3)
 
-#ggsave(filename = "Isskirtys_probit_2.png", width = 8, height = 3, units = "in", dpi = 300)
+#ggsave(filename = "Isskirtys_probit_2.png", width = 6.7, height = 2.5, units = "in", dpi = 300)
 ```
 
 ```{r}
@@ -912,19 +916,16 @@ summary(cloglog_model_original)
 
 Išskirtys
 
-```{r}
-cook_plot(cloglog_model_original)
-```
-
-
-```{r}
-pearson_plot(cloglog_model_original)
-```
-
-```{r}
+```{r fig.height=2.5, fig.width=6.7}
+cook_plot(cloglog_model_original) + 
+  pearson_plot(cloglog_model_original) + 
+  plot_annotation( 
+    title = "Cloglog modelio Kuko atstumai ir Pirsono liekanos",
+    theme = theme(plot.title = element_text(size = 14)))
 outlierTest(cloglog_model_original)
-```
 
+#ggsave(filename = "cloglog_isskirtys.png", width = 6.7, height = 2.5, units = "in", dpi = 300)
+```
 
 
 Multikolinearumas
