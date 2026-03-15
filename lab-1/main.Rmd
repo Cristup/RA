@@ -1014,6 +1014,17 @@ coef(cloglog_model_original_multi)
 confint.default(cloglog_model_original_multi, level=0.95)
 ```
 
+```{r}
+train_std <- train_data
+train_std$call_failure <- scale(train_data$call_failure)
+train_std$freq_of_SMS <- scale(train_data$freq_of_SMS)
+train_std$freq_of_use <- scale(train_data$freq_of_use)
+
+model_std <- glm(churn ~ call_failure + complains + freq_of_SMS + freq_of_use * status, 
+                 family = binomial(link = "cloglog"), data = train_std)
+
+sort(abs(coef(model_std)), decreasing = TRUE)
+```
 
 
 ### Cloglog modelis Youden
