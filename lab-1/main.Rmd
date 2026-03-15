@@ -818,8 +818,9 @@ ClassLog(probit_model2_interaction, balanced_churn$churn)
 confusion_test(probit_model2_interaction, test_data)
 ```
 
-```{r}
+```{r fig.height=2.5, fig.width=3}
 ROC_plot(probit_model2_interaction, test_data)
+#ggsave(filename = "probit_roc.png", width = 3, height = 2.5, units = "in", dpi = 300)
 ```
 
 
@@ -990,9 +991,10 @@ summary(cloglog_model_original_multi)
 vif(cloglog_model_original_multi) #pradinio modelio vifai geri
 ```
 
-```{r}
+```{r fig.height=2.5, fig.width=3}
 ClassLog(cloglog_model_original_multi, train_data$churn)
 ROC_plot(cloglog_model_original_multi, test_data)
+#ggsave(filename = "cloglog_roc.png", width = 3, height = 2.5, units = "in", dpi = 300)
 ```
 
 
