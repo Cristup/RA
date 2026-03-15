@@ -277,12 +277,13 @@ combined_plot <- (gg1 + gg2) / (gg3 + gg4)
 
 combined_plot + plot_annotation(
   title = "Klientų skaitinių rodiklių pasiskirstymas pagal atsisakymą",
-  theme = theme(plot.title = element_text(size = 14))) &
+  theme = theme(plot.title = element_text(size = 18))) &
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12),
-        axis.title.x = element_text(size = 13),
-        axis.title.y = element_text(size = 13))
+        axis.title.x = element_text(size = 13, face = "plain"),
+        axis.title.y = element_text(size = 13, face = "plain"))
 
+ggsave(filename = "boxplot_1.png", width = 10, height = 6, units = "in", dpi = 300)
 ```
 
 
@@ -312,11 +313,13 @@ gg3 <- ggbetweenstats(data = churn_data, x = churn, y = freq_of_use, plot.type =
 
 (gg1 + gg2 + gg3) + plot_annotation(
   title = "Klientų skaitinių rodiklių pasiskirstymas pagal atsisakymą",
-  theme = theme(plot.title = element_text(size = 14))) &
+  theme = theme(plot.title = element_text(size = 18))) &
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12),
-        axis.title.x = element_text(size = 13),
-        axis.title.y = element_text(size = 13))
+        axis.title.x = element_text(size = 13, face = "plain"),
+        axis.title.y = element_text(size = 13, face = "plain"))
+
+#ggsave(filename = "boxplot_2.png", width = 10, height = 3.5, units = "in", dpi = 300)
 
 ```
 
@@ -510,7 +513,7 @@ confusion_test <- function(mdl, test_set) {
   confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
   print(confusion_matrix)
   
-  confusion_pct <- prop.table(confusion_matrix, 1)
+  confusion_pct <- prop.table(confusion_matrix, 2)
   print(round(confusion_pct, 2))
 }
 ```
@@ -730,13 +733,20 @@ Multikolinearumas
 ```{r}
 vif(probit_model)
 ```
+
 Išskirtys
 
 ```{r}
-cook_plot(probit_model)
-pearson_plot(probit_model)
+cook_plot(probit_model) + 
+  pearson_plot(probit_model) + 
+  plot_annotation( 
+    title = "Probit modelio Kuko atstumai ir Pirsono liekanos",
+    theme = theme(plot.title = element_text(size = 16)))
 outlierTest(probit_model)
+
+#ggsave(filename = "Isskirtys_probit_1.png", width = 8, height = 3, units = "in", dpi = 300)
 ```
+
 ```{r}
 balanced_churn[1676, ]
 ```
@@ -751,6 +761,7 @@ probit_model1 <- glm(formula = churn ~ call_failure + complains + subscription_l
 
 summary(probit_model1)
 ```
+
 Modelis su kovariante *freq_of_use*:
 
 ```{r}
@@ -769,6 +780,7 @@ BIC(probit_model1, probit_model2)
 Mažiausias reikšmes įgyja antras modelis *probit_model2* su kovariante *freq_of_use*.
 
 ```{r}
+ClassLog(probit_model2, balanced_churn$churn)
 confusion_test(probit_model2, test_data)
 ```
 
@@ -788,7 +800,9 @@ probit_model2_interaction <- glm(formula = churn ~ call_failure + complains + su
 
 summary(probit_model2_interaction) 
 ```
+
 ```{r}
+ClassLog(probit_model2_interaction, balanced_churn$churn)
 confusion_test(probit_model2_interaction, test_data)
 ```
 
@@ -814,9 +828,14 @@ vif(probit_model3)
 Išskirtys
 
 ```{r}
-cook_plot(probit_model3)
-pearson_plot(probit_model3)
+cook_plot(probit_model3) + 
+  pearson_plot(probit_model3) + 
+  plot_annotation( 
+    title = "Probit modelio Kuko atstumai ir Pirsono liekanos",
+    theme = theme(plot.title = element_text(size = 16)))
 outlierTest(probit_model3)
+
+#ggsave(filename = "Isskirtys_probit_2.png", width = 8, height = 3, units = "in", dpi = 300)
 ```
 
 ```{r}
@@ -847,6 +866,7 @@ probit_model32 <- glm(formula = churn ~ call_failure + complains + subscription_
 
 summary(probit_model32)
 ```
+
 AIC ir BIC:
 
 ```{r}
@@ -874,6 +894,7 @@ probit_model32_interaction <- glm(formula = churn ~ call_failure + complains + s
 
 summary(probit_model32_interaction)
 ```
+
 ```{r}
 ROC_youden_plot(probit_model32_interaction, train_data, test_data)
 ```
