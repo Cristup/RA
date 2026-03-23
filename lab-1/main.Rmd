@@ -730,6 +730,77 @@ outlierTest(logit_mdl_fu)
 #ROC_plot(logit_mdl_fu_v2, test_data)
 ```
 
+### Kryžminė validacija
+
+```{r}
+set.seed(321)
+repeated_folds <- vfold_cv(churn_data2, v = 5, repeats = 3, strata = churn)
+
+total_iterations <- nrow(repeated_folds)
+cv_results <- data.frame(
+  iteration = 1:total_iterations, 
+  accuracy = 0, 
+  sensitivity = 0, 
+  specificity = 0
+)
+
+for (i in 1:nrow(repeated_folds)) {
+  
+  train_split <- analysis(repeated_folds$splits[[i]])
+  val_split <- assessment(repeated_folds$splits[[i]])
+  
+  fold_recipe <- recipe(churn ~ ., data = train_split) %>%
+    step_smotenc(churn, over_ratio = 1.0) %>%
+    prep()
+  
+  balanced_train <- juice(fold_recipe)
+  val_ready <- bake(fold_recipe, new_data = val_split)
+  
+  logit_fit <- glm(
+    formula = churn ~ subscription_length + freq_of_SMS + 
+              distinct_called_numbers + complains + status + 
+              charge_amount + age_group2 + freq_of_use*age_group2, 
+    data = balanced_train, 
+    family = binomial(logit)
+  )
+  
+  probs <- predict(logit_fit, newdata = val_ready, type = "response")
+  preds <- as.factor(ifelse(probs > 0.5, "1", "0"))
+  
+  eval_data <- data.frame(truth = val_ready$churn, estimate = preds)
+  
+  cv_results$accuracy[i] <- accuracy_vec(eval_data$truth, eval_data$estimate)
+  cv_results$sensitivity[i] <- sens_vec(eval_data$truth, eval_data$estimate)
+  cv_results$specificity[i] <- spec_vec(eval_data$truth, eval_data$estimate)
+}
+
+print(cv_results)
+colMeans(cv_results[,-1])
+```
+
+```{r}
+logit_mdl_smote_gamma <- glm(formula = churn ~ subscription_length + freq_of_SMS + distinct_called_numbers + complains + status + charge_amount + age_group2 + freq_of_use*age_group2, data = balanced_churn, family = binomial(logit))
+
+summary(logit_mdl_smote_gamma)
+
+set.seed(1)
+
+data_split <- initial_split(churn_data2, prop = 0.8, strata = churn)
+
+train_data <- training(data_split)
+train_data <- train_data %>% slice_sample(prop = 1)
+test_data  <- testing(data_split)
+test_data <- test_data %>% slice_sample(prop = 1)
+
+set.seed(1)
+smote_recipe <- recipe(churn ~., data = train_data) %>% 
+  step_smotenc(churn, over_ratio = 1.0)
+
+trained_recipe <- prep(smote_recipe)
+balanced_churn <- juice(trained_recipe)
+
+```
+
 ## Probit
 
 ### Balansavimas naudojantis SMOTE
@@ -823,6 +894,52 @@ ROC_plot(probit_model2_interaction, test_data)
 #ggsave(filename = "probit_roc.png", width = 3, height = 2.5, units = "in", dpi = 300)
 ```
 
+### Kryžminė validacija
+
+```{r}
+set.seed(321)
+repeated_folds <- vfold_cv(churn_data2, v = 5, repeats = 3, strata = churn)
+
+total_iterations <- nrow(repeated_folds)
+cv_results <- data.frame(
+  iteration = 1:total_iterations, 
+  accuracy = 0, 
+  sensitivity = 0, 
+  specificity = 0
+)
+
+for (i in 1:nrow(repeated_folds)) {
+  
+  train_split <- analysis(repeated_folds$splits[[i]])
+  val_split <- assessment(repeated_folds$splits[[i]])
+  
+  fold_recipe <- recipe(churn ~ ., data = train_split) %>%
+    step_smotenc(churn, over_ratio = 1.0) %>%
+    prep()
+  
+  balanced_train <- juice(fold_recipe)
+  val_ready <- bake(fold_recipe, new_data = val_split)
+  
+  probit_fit <- glm(
+    formula = churn ~ call_failure + complains + subscription_length + 
+      charge_amount + freq_of_use + freq_of_SMS + distinct_called_numbers + 
+      status + age_group2 + call_failure:complains, data = balanced_churn, 
+    family = binomial(link = "probit")
+    )
+  
+  probs <- predict(probit_fit, newdata = val_ready, type = "response")
+  preds <- as.factor(ifelse(probs > 0.5, "1", "0"))
+  
+  eval_data <- data.frame(truth = val_ready$churn, estimate = preds)
+  
+  cv_results$accuracy[i] <- accuracy_vec(eval_data$truth, eval_data$estimate)
+  cv_results$sensitivity[i] <- sens_vec(eval_data$truth, eval_data$estimate)
+  cv_results$specificity[i] <- spec_vec(eval_data$truth, eval_data$estimate)
+}
+
+print(cv_results)
+colMeans(cv_results[,-1])
+```
 
 ### Balansavimas naudojantis slenksčiu ir Youden indeksu
 
