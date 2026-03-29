@@ -1,0 +1,99 @@
+---
+title: "main"
+output: html_document
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(corrplot)
+library(GGally)
+library(MASS)
+library(knitr)
+library(qqplotr)
+library(car)
+library(ppcor)
+library(lmtest)
+library(scales)
+
+set.seed(123)
+```
+
+```{r DUOMENŲ PARUOŠIMAS, include=FALSE}
+
+original_data <- read.csv("FINAL_SPINNY_900.csv")
+
+original_data <- original_data %>%
+  rename(
+    car_name = Car_Name,
+    manufacturer = Make,
+    model = Model,
+    year = Make_Year,
+    color = Color,
+    body_type = Body_Type,
+    mileage = Mileage_Run,
+    num_owners = No_of_Owners,
+    seating_capacity = Seating_Capacity,
+    fuel = Fuel_Type,
+    tank_capacity = Fuel_Tank_Capacity.L.,
+    engine_type = Engine_Type,
+    cc_displacement = CC_Displacement,
+    transmission_speed = Transmission,
+    transmission_type = Transmission_Type,
+    bhp = Power.BHP.,
+    torque = Torque.Nm.,
+    fuel_economy = Mileage.kmpl.,
+    emission = Emission,
+    price = Price
+  )
+```
+
+```{r include=FALSE}
+original_data$price <- as.numeric(gsub(",", "", original_data$price))
+original_data$mileage <- as.numeric(gsub(",", "", original_data$mileage))
+
+original_data <- original_data %>% 
+  mutate(across(c("manufacturer", "year","color", "body_type", "num_owners", "seating_capacity", "fuel", "transmission_speed", "transmission_type", "emission"), as.factor))
+```
+
+```{r include=FALSE}
+data <- original_data
+
+rm(original_data)
+
+data$fuel_economy[data$fuel_economy == '105 bhp @ 4400 RPM'] <- NA
+data$fuel_economy[data$fuel_economy == 'BS IV'] <- NA
+
+data <- na.omit(data)
+
+data$fuel_economy <- as.numeric(data$fuel_economy)
+
+data$price <- data$price / 80.485 * 1.0932
+```
+
+## Kaina
+
+```{r fig.height=3.6, fig.width=8, echo=FALSE, fig.cap="Kainos histograma"}
+mean_price <- mean(data$price, na.rm = TRUE)
+sd_price <- sd(data$price, na.rm = TRUE)
+
+ggplot() +
+  geom_histogram(data = data, aes(x = price, y = after_stat(density)), bins = 30,
+                 fill = "lightblue", alpha = 0.85, color = "cyan4") +
+  stat_function(fun = dnorm,
+                args = list(mean = mean_price, sd = sd_price),
+                color = "red", size = 1) +
+  theme_bw() +
+  labs(x = "Kaina", y = "Tankis")
+```
+
+```{r fig.height=3.6, fig.width=8, echo=FALSE, fig.cap="Kainos empiriniai ir teoriniai kvantiliai"}
+ggplot(data, aes(sample = price)) +
+  stat_qq_point() +
+  stat_qq_line(color = "red", linetype = "dashed") +
+  theme_bw() +
+  labs(x = "Teoriniai kvantiliai", y = "Empiriniai kvantiliai")
+```
+
