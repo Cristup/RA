@@ -366,6 +366,8 @@ glm_gama_4 <- step(gama_bhp_bhp, direction = "both", trace = FALSE)
 summary(glm_gama_4)
 
 setdiff(names(coef(gama_bhp_bhp)), names(coef(glm_gama_4)))
+
+glm_gama <- glm_gama_4
 ```
 
 
@@ -393,26 +395,32 @@ pred_bc_transformed <- predict(best_model, newdata = test_data)
 pred_lm_original <- (pred_bc_transformed * lambda_opt + 1)^(1/lambda_opt)
 
 pred_ig_original <- predict(glm_mdl_v2, newdata = test_data, type = "response")
+pred_gama <- predict(glm_gama, newdata = test_data, type = "response")
+
 
 metrics <- data.frame(
-  Model = c("Box-Cox LM", "Inv-Gaussian GLM"),
+  Model = c("Box-Cox LM", "Inv-Gaussian GLM", "Gama"),
   RMSE = c(
     sqrt(mean((test_data$price - pred_lm_original)^2, na.rm = TRUE)),
-    sqrt(mean((test_data$price - pred_ig_original)^2, na.rm = TRUE))
+    sqrt(mean((test_data$price - pred_ig_original)^2, na.rm = TRUE)),
+    sqrt(mean((test_data$price - pred_gama)^2, na.rm = TRUE))
   ),
   MAE = c(
     mean(abs(test_data$price - pred_lm_original), na.rm = TRUE),
-    mean(abs(test_data$price - pred_ig_original), na.rm = TRUE)
+    mean(abs(test_data$price - pred_ig_original), na.rm = TRUE),
+    mean(abs(test_data$price - pred_gama), na.rm = TRUE)
   )
 )
 
 print(metrics)
 ```
 
-```{r fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+```{r fig.height=4, fig.width=12, message=FALSE, warning=FALSE}
 test_data$pred_bc_orig <- (predict(best_model, newdata = test_data) * lambda_opt + 1)^(1 / lambda_opt)
 
 test_data$pred_ig_orig <- predict(glm_mdl_v2, newdata = test_data, type = "response")
+
+test_data$pred_gama <- predict(glm_gama, newdata = test_data, type = "response")
 
 p1 <- ggplot(test_data, aes(x = price, y = pred_bc_orig)) +
   geom_point(color = "lightblue2", size = 2, alpha = 0.6) +
@@ -428,6 +436,13 @@ p2 <- ggplot(test_data, aes(x = price, y = pred_ig_orig)) +
        x = "Tikrosios kainos", y = "Prognozės") +
   theme_bw()
 
-p1 + p2
+p3 <- ggplot(test_data, aes(x = price, y = pred_gama)) +
+  geom_point(color = "pink", size = 2, alpha = 0.6) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Gama regresija",
+       x = "Tikrosios kainos", y = "Prognozės") +
+  theme_bw()
+
+p1 + p2 + p3
 ```
 
