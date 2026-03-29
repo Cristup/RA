@@ -302,3 +302,102 @@ p2 <- ggplot(test_data, aes(x = price, y = pred_ig_orig)) +
 
 p1 + p2
 ```
+
+## Gama
+
+### Su vienodais regresoriais
+
+```{r}
+gama_mdl <- glm(price ~ year + num_owners_group + transmission_type + tank_capacity + 
+                  bhp + cc_displacement + emission + fuel_economy + cc_displacement * bhp,
+                family=Gamma(link="log"), data=train_data)
+summary(gama_mdl) 
+```
+### Iš naujo atrenkami regresoriai
+
+```{r}
+gama_full_mdl <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + tank_capacity + cc_displacement + 
+              torque + bhp + emission + fuel_type + fuel_economy +
+              transmission_speed_group, family=Gamma(link="log"), data=train_data)
+summary(gama_full_mdl)
+```
+
+```{r}
+vif(gama_full_mdl)
+```
+
+Multikolinearumas tarp: torque, bhp, fuel_type
+
+Pirmas pretendentas
+
+```{r}
+gama_torque <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + tank_capacity + cc_displacement + 
+              torque + emission + fuel_economy +
+              transmission_speed_group, family=Gamma(link="log"), data=train_data)
+#summary(gama_torque)
+vif(gama_torque)
+```
+```{r}
+gama_torque_tank_capacity <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + tank_capacity + cc_displacement + emission + fuel_economy +
+              transmission_speed_group, family=Gamma(link="log"), data=train_data)
+#summary(gama_torque)
+vif(gama_torque_tank_capacity)
+```
+
+```{r}
+gama_torque_torque <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + cc_displacement + 
+              torque + emission + fuel_economy +
+              transmission_speed_group, family=Gamma(link="log"), data=train_data)
+#summary(gama_torque)
+vif(gama_torque_torque)
+```
+
+Antras pretendentas
+
+```{r}
+gama_bhp <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + tank_capacity + cc_displacement + 
+              bhp + emission + fuel_economy +
+              transmission_speed_group, family=Gamma(link="log"), data=train_data)
+vif(gama_bhp)
+```
+```{r}
+gama_bhp_tank_capacity <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + tank_capacity + cc_displacement + emission + fuel_economy +
+              transmission_speed_group, family=Gamma(link="log"), data=train_data)
+vif(gama_bhp_tank_capacity)
+```
+
+```{r}
+gama_bhp_bhp <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + cc_displacement + 
+              bhp + emission + fuel_economy +
+              transmission_speed_group, family=Gamma(link="log"), data=train_data)
+vif(gama_bhp_bhp)
+```
+
+
+Trečias pretendentas
+
+```{r}
+gama_fuel_type <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + tank_capacity + cc_displacement + 
+              emission + fuel_type + fuel_economy +
+              transmission_speed_group, family=Gamma(link="log"), data=train_data)
+vif(gama_fuel_type)
+```
+
+
+
