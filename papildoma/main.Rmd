@@ -97,3 +97,208 @@ ggplot(data, aes(sample = price)) +
   labs(x = "Teoriniai kvantiliai", y = "Empiriniai kvantiliai")
 ```
 
+```{r echo=FALSE, tab.cap="Gamintojų skaičius pagal būstinės valstybę"}
+data <- data %>%
+  mutate(manufacturer_country = case_when(
+    manufacturer %in% c("Chevrolet", "Ford", "Jeep") ~ "United States",
+    manufacturer %in% c("Datsun", "Honda", "Nissan", "Toyota") ~ "Japan",
+    manufacturer %in% c("Hyundai", "Kia") ~ "South Korea",
+    manufacturer %in% c("Mahindra", "Maruti Suzuki", "Tata") ~ "India",
+    manufacturer %in% c("MG Motors") ~ "United Kingdom",
+    manufacturer %in% c("Renault") ~ "France",
+    manufacturer %in% c("Skoda") ~ "Czech Republic",
+    manufacturer %in% c("Volkswagen") ~ "Germany",
+    TRUE ~ "Other"
+  ))
+
+data %>%
+  count(manufacturer_country, name = "Count") %>%
+  arrange(desc(Count))
+
+bc_model <- lm(price ~ 1, data = data)
+bc <- boxcox(bc_model, Lambda = seq(-2, 2, 0.1), plotit = FALSE)
+
+lambda_opt <- bc$x[which.max(bc$y)]
+
+data$price_bc <- ((data$price)^lambda_opt - 1) / lambda_opt
+
+data <- data %>% 
+  mutate(num_owners_group= case_when(
+    num_owners %in% c("2nd", "3rd") ~ "more than 1",
+    TRUE ~ num_owners
+  ))
+
+data <- data %>%
+  mutate(color_group = case_when(
+    color %in% c("black", "grey", "silver") ~ "Neutral / Dark",
+    color %in% c("white", "beige", "golden") ~ "Light / Neutral",
+    color %in% c("red", "maroon", "orange", "brown", "bronze", "yellow") ~ "Warm",
+    color %in% c("blue", "green", "purple") ~ "Cool",
+    TRUE ~ "Other"
+  ))
+
+data <- data %>% 
+  mutate(body_type_group = case_when(
+    body_type %in% c("suv", "crossover", "muv") ~ "large_vehicles",
+    body_type %in% c("sedan", "hatchback") ~ "smaller_vehicles"
+  ))
+
+data <- data %>% 
+  mutate(fuel_type = case_when(
+    fuel == "diesel" ~ "diesel",
+    fuel %in% c("petrol", "petrol+cng") ~ "petrol+"
+  ))
+
+data <- data %>% 
+  mutate(transmission_speed_group = case_when(
+    transmission_speed %in% c("7-Speed", "CVT") ~ "others",
+    TRUE ~ transmission_speed
+  ))
+```
+
+# Kelių kintamųjų regresija
+
+## Gauso (senas)
+
+```{r include=FALSE}
+data = data[-12, ]
+
+data = data %>% 
+  filter(manufacturer_country != "Czech Republic")
+```
+
+```{r include=FALSE}
+data = data %>% filter(seating_capacity != 4 & seating_capacity != 6)
+
+data <- data %>%
+  mutate(seating_capacity_group = case_when(
+    seating_capacity == 5 ~ "5",
+    seating_capacity %in% c(7, 8) ~ "7+"
+  ))
+```
+
+```{r include=FALSE}
+train_indices <- sample(seq_len(nrow(data)), size = 0.7 * nrow(data))
+
+train_data <- data[train_indices, ]
+test_data  <- data[-train_indices, ]
+```
+
+```{r include=FALSE}
+best_model <- lm(price_bc ~ year + num_owners_group + transmission_type + tank_capacity + 
+                  bhp + cc_displacement + emission + fuel_economy + cc_displacement * bhp,
+                data = train_data)
+
+summary(best_model)
+```
+
+```{r echo=FALSE, fig.cap="Tikrosios reikšmės vs. prognozės", fig.height=4, fig.width=4, message=FALSE, warning=FALSE}
+plot_data <- data.frame(
+  y_i = test_data$price_bc,
+  y_hat = predict(best_model, newdata = test_data)
+)
+
+lims <- range(c(plot_data$y_i, plot_data$y_hat), na.rm = TRUE)
+
+ggplot(plot_data, aes(x = y_i, y = y_hat)) +
+  geom_point(color = "lightblue2", size = 2.5, alpha = 0.75) +
+  geom_abline(intercept = 0, slope = 1,
+              color = "red", linetype = "dashed", size = 1.1, alpha = 0.8) +
+  scale_x_continuous(limits = lims) +
+  scale_y_continuous(limits = lims) +
+  labs(x = "Tikrosios reikšmės",
+       y = "Prognozės") +
+  theme_bw()
+```
+
+## Atvirkštinė Gauso
+
+### Su vienodais regresoriais
+
+```{r}
+glm_mdl <- glm(price ~ year + num_owners_group + transmission_type + tank_capacity + 
+                  bhp + cc_displacement + emission + fuel_economy + cc_displacement * bhp, data=train_data, family=inverse.gaussian(link="log"))
+
+summary(glm_mdl)
+```
+
+### Iš naujo atrenkami regresoriai
+
+```{r}
+glm_full_mdl <- glm(price ~ manufacturer_country + year + transmission_type +
+              num_owners_group + seating_capacity_group + color_group +
+              body_type_group + mileage + tank_capacity + cc_displacement + 
+              torque + bhp + emission + fuel_type + fuel_economy +
+              transmission_speed_group, data=train_data, 
+              family=inverse.gaussian(link="log"))
+```
+
+```{r}
+glm_step <- step(glm_full_mdl, direction = "both", trace = FALSE)
+
+summary(glm_step)
+
+setdiff(names(coef(glm_mdl)), names(coef(glm_step)))
+```
+
+```{r}
+vif(glm_step)
+```
+
+```{r}
+glm_mdl_v2 <- glm(price ~ manufacturer_country + year + transmission_type + num_owners_group + color_group + body_type_group + 
+                    mileage + tank_capacity + bhp + fuel_type + fuel_economy + cc_displacement * bhp, data=train_data, 
+                   family=inverse.gaussian(link="log"))
+
+summary(glm_mdl_v2)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+plot(glm_mdl_v2)
+```
+
+### Palyginimas
+
+```{r}
+pred_bc_transformed <- predict(best_model, newdata = test_data)
+pred_lm_original <- (pred_bc_transformed * lambda_opt + 1)^(1/lambda_opt)
+
+pred_ig_original <- predict(glm_mdl_v2, newdata = test_data, type = "response")
+
+metrics <- data.frame(
+  Model = c("Box-Cox LM", "Inv-Gaussian GLM"),
+  RMSE = c(
+    sqrt(mean((test_data$price - pred_lm_original)^2, na.rm = TRUE)),
+    sqrt(mean((test_data$price - pred_ig_original)^2, na.rm = TRUE))
+  ),
+  MAE = c(
+    mean(abs(test_data$price - pred_lm_original), na.rm = TRUE),
+    mean(abs(test_data$price - pred_ig_original), na.rm = TRUE)
+  )
+)
+
+print(metrics)
+```
+
+```{r fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+test_data$pred_bc_orig <- (predict(best_model, newdata = test_data) * lambda_opt + 1)^(1 / lambda_opt)
+
+test_data$pred_ig_orig <- predict(glm_mdl_v2, newdata = test_data, type = "response")
+
+p1 <- ggplot(test_data, aes(x = price, y = pred_bc_orig)) +
+  geom_point(color = "lightblue2", size = 2, alpha = 0.6) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Box-Cox tiesinė regresija",
+       x = "Tikrosios kainos", y = "Prognozės") +
+  theme_bw()
+
+p2 <- ggplot(test_data, aes(x = price, y = pred_ig_orig)) +
+  geom_point(color = "palegreen2", size = 2, alpha = 0.6) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Atvirkštinė Gauso regresija",
+       x = "Tikrosios kainos", y = "Prognozės") +
+  theme_bw()
+
+p1 + p2
+```
