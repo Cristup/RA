@@ -513,13 +513,13 @@ confusion_test <- function(mdl, test_set) {
   probs_test <- predict(mdl, newdata = test_set, type = "response")
   final_preds_test <- ifelse(probs_test >= 0.5, 1, 0)
   
-  confusion_matrix <- table(Tikra = test_data$churn, Prognoze = final_preds_test)
+  confusion_matrix <- table(Tikra = test_set$churn, Prognoze = final_preds_test)
   print(confusion_matrix)
   
   accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
   print(paste("Bendras tikslumas (Accuracy):", round(accuracy, 4)))
   
-  confusion_pct <- prop.table(confusion_matrix, 2)
+  confusion_pct <- prop.table(confusion_matrix, 1)
   print(round(confusion_pct, 2))
 }
 ```
