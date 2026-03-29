@@ -258,50 +258,7 @@ par(mfrow = c(2, 2))
 plot(glm_mdl_v2)
 ```
 
-### Palyginimas
 
-```{r}
-pred_bc_transformed <- predict(best_model, newdata = test_data)
-pred_lm_original <- (pred_bc_transformed * lambda_opt + 1)^(1/lambda_opt)
-
-pred_ig_original <- predict(glm_mdl_v2, newdata = test_data, type = "response")
-
-metrics <- data.frame(
-  Model = c("Box-Cox LM", "Inv-Gaussian GLM"),
-  RMSE = c(
-    sqrt(mean((test_data$price - pred_lm_original)^2, na.rm = TRUE)),
-    sqrt(mean((test_data$price - pred_ig_original)^2, na.rm = TRUE))
-  ),
-  MAE = c(
-    mean(abs(test_data$price - pred_lm_original), na.rm = TRUE),
-    mean(abs(test_data$price - pred_ig_original), na.rm = TRUE)
-  )
-)
-
-print(metrics)
-```
-
-```{r fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
-test_data$pred_bc_orig <- (predict(best_model, newdata = test_data) * lambda_opt + 1)^(1 / lambda_opt)
-
-test_data$pred_ig_orig <- predict(glm_mdl_v2, newdata = test_data, type = "response")
-
-p1 <- ggplot(test_data, aes(x = price, y = pred_bc_orig)) +
-  geom_point(color = "lightblue2", size = 2, alpha = 0.6) +
-  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
-  labs(title = "Box-Cox tiesinė regresija",
-       x = "Tikrosios kainos", y = "Prognozės") +
-  theme_bw()
-
-p2 <- ggplot(test_data, aes(x = price, y = pred_ig_orig)) +
-  geom_point(color = "palegreen2", size = 2, alpha = 0.6) +
-  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
-  labs(title = "Atvirkštinė Gauso regresija",
-       x = "Tikrosios kainos", y = "Prognozės") +
-  theme_bw()
-
-p1 + p2
-```
 
 ## Gama
 
@@ -348,6 +305,12 @@ gama_torque_tank_capacity <- glm(price ~ manufacturer_country + year + transmiss
               transmission_speed_group, family=Gamma(link="log"), data=train_data)
 #summary(gama_torque)
 vif(gama_torque_tank_capacity)
+
+glm_gama_1 <- step(gama_torque_tank_capacity, direction = "both", trace = FALSE)
+
+summary(glm_gama_1)
+
+setdiff(names(coef(gama_torque_tank_capacity)), names(coef(glm_gama_1)))
 ```
 
 ```{r}
@@ -358,6 +321,12 @@ gama_torque_torque <- glm(price ~ manufacturer_country + year + transmission_typ
               transmission_speed_group, family=Gamma(link="log"), data=train_data)
 #summary(gama_torque)
 vif(gama_torque_torque)
+
+glm_gama_2 <- step(gama_torque_torque, direction = "both", trace = FALSE)
+
+summary(glm_gama_2)
+
+setdiff(names(coef(gama_torque_torque)), names(coef(glm_gama_2)))
 ```
 
 Antras pretendentas
@@ -376,6 +345,12 @@ gama_bhp_tank_capacity <- glm(price ~ manufacturer_country + year + transmission
               body_type_group + mileage + tank_capacity + cc_displacement + emission + fuel_economy +
               transmission_speed_group, family=Gamma(link="log"), data=train_data)
 vif(gama_bhp_tank_capacity)
+
+glm_gama_3 <- step(gama_bhp_tank_capacity, direction = "both", trace = FALSE)
+
+summary(glm_gama_3)
+
+setdiff(names(coef(gama_bhp_tank_capacity)), names(coef(glm_gama_3)))
 ```
 
 ```{r}
@@ -385,6 +360,12 @@ gama_bhp_bhp <- glm(price ~ manufacturer_country + year + transmission_type +
               bhp + emission + fuel_economy +
               transmission_speed_group, family=Gamma(link="log"), data=train_data)
 vif(gama_bhp_bhp)
+
+glm_gama_4 <- step(gama_bhp_bhp, direction = "both", trace = FALSE)
+
+summary(glm_gama_4)
+
+setdiff(names(coef(gama_bhp_bhp)), names(coef(glm_gama_4)))
 ```
 
 
@@ -397,7 +378,56 @@ gama_fuel_type <- glm(price ~ manufacturer_country + year + transmission_type +
               emission + fuel_type + fuel_economy +
               transmission_speed_group, family=Gamma(link="log"), data=train_data)
 vif(gama_fuel_type)
+
+glm_gama_5 <- step(gama_fuel_type, direction = "both", trace = FALSE)
+
+summary(glm_gama_5)
+
+setdiff(names(coef(gama_fuel_type)), names(coef(glm_gama_5)))
 ```
 
+### Palyginimas
 
+```{r}
+pred_bc_transformed <- predict(best_model, newdata = test_data)
+pred_lm_original <- (pred_bc_transformed * lambda_opt + 1)^(1/lambda_opt)
+
+pred_ig_original <- predict(glm_mdl_v2, newdata = test_data, type = "response")
+
+metrics <- data.frame(
+  Model = c("Box-Cox LM", "Inv-Gaussian GLM"),
+  RMSE = c(
+    sqrt(mean((test_data$price - pred_lm_original)^2, na.rm = TRUE)),
+    sqrt(mean((test_data$price - pred_ig_original)^2, na.rm = TRUE))
+  ),
+  MAE = c(
+    mean(abs(test_data$price - pred_lm_original), na.rm = TRUE),
+    mean(abs(test_data$price - pred_ig_original), na.rm = TRUE)
+  )
+)
+
+print(metrics)
+```
+
+```{r fig.height=4, fig.width=8, message=FALSE, warning=FALSE}
+test_data$pred_bc_orig <- (predict(best_model, newdata = test_data) * lambda_opt + 1)^(1 / lambda_opt)
+
+test_data$pred_ig_orig <- predict(glm_mdl_v2, newdata = test_data, type = "response")
+
+p1 <- ggplot(test_data, aes(x = price, y = pred_bc_orig)) +
+  geom_point(color = "lightblue2", size = 2, alpha = 0.6) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Box-Cox tiesinė regresija",
+       x = "Tikrosios kainos", y = "Prognozės") +
+  theme_bw()
+
+p2 <- ggplot(test_data, aes(x = price, y = pred_ig_orig)) +
+  geom_point(color = "palegreen2", size = 2, alpha = 0.6) +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
+  labs(title = "Atvirkštinė Gauso regresija",
+       x = "Tikrosios kainos", y = "Prognozės") +
+  theme_bw()
+
+p1 + p2
+```
 
