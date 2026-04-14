@@ -288,6 +288,17 @@ plot(gama_full_mdl)
 ```
 
 ```{r}
+library(statmod)
+# Sugeneruojame kvantilines liekanas tavo Gama modeliui
+kvant_liekanos <- qresiduals(gama_full_mdl)
+
+# Braižome Q-Q grafiką
+qqnorm(kvant_liekanos)
+qqline(kvant_liekanos, col = "red")
+```
+
+
+```{r}
 vif(gama_full_mdl)
 ```
 
@@ -415,6 +426,11 @@ metrics <- data.frame(
     mean(abs(test_data$price - pred_lm_original), na.rm = TRUE),
     mean(abs(test_data$price - pred_ig_original), na.rm = TRUE),
     mean(abs(test_data$price - pred_gama), na.rm = TRUE)
+  ), 
+  AIC = c(
+    AIC(best_model),
+    AIC(glm_mdl_v2),
+    AIC(glm_gama)
   )
 )
 
@@ -454,5 +470,34 @@ p1 + p2 + p3
 
 ```{r}
 AIC(best_model)
-AIC(glm)
+AIC(glm_mdl_v2)
+```
+
+
+```{r}
+model <- glm_mdl_v2
+resid_mean <- mean(model$residuals)
+resid_sd <- sd(model$residuals)
+
+
+rp2 <- ggplot(data.frame(sample = residuals(model)), aes(sample = sample)) +
+  stat_qq_point(size = 2, alpha = 0.6) +
+  stat_qq_line(color = "red", linetype = "dashed") +
+  theme_bw() +
+  labs(x = "Teoriniai kvantiliai", y = "Empiriniai kvantiliai")
+rp2
+```
+
+```{r}
+model <- glm_gama
+resid_mean <- mean(model$residuals)
+resid_sd <- sd(model$residuals)
+
+
+rp2 <- ggplot(data.frame(sample = residuals(model)), aes(sample = sample)) +
+  stat_qq_point(size = 2, alpha = 0.6) +
+  stat_qq_line(color = "red", linetype = "dashed") +
+  theme_bw() +
+  labs(x = "Teoriniai kvantiliai", y = "Empiriniai kvantiliai")
+rp2
 ```
