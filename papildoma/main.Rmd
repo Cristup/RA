@@ -452,3 +452,7 @@ p3 <- ggplot(test_data, aes(x = price, y = pred_gama)) +
 p1 + p2 + p3
 ```
 
+```{r}
+AIC(best_model)
+AIC(glm)
+```
