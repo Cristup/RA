@@ -1,5 +1,8 @@
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(corrplot)
+library(ggplot2)
+library(patchwork)
 ```
 
 ```{r}
@@ -100,3 +103,33 @@ char
 
 ## Sąryšiai
 
+```{r}
+ggplot(data, aes(x = SALE_PRC)) +
+  geom_histogram(color = "black", fill = "royalblue")
+```
+
+
+```{r}
+numeric_values <- data %>% 
+  dplyr::select(where(is.numeric)) %>% 
+  dplyr::select(-'LATITUDE', -'LONGITUDE', -'PARCELNO', -'avno60plus')
+
+cor <- cor(numeric_values, method = "spearman")
+corrplot(cor, method = "color", addCoef.col = "black", tl.cex = 0.7, number.cex = 0.45)
+```
+
+```{r}
+numeric_values %>%
+  pivot_longer(cols = -SALE_PRC, 
+               names_to = "kintamasis", 
+               values_to = "reiksme") %>%
+
+  ggplot(aes(x = reiksme, y = SALE_PRC)) +
+  geom_point(alpha = 0.4, color = "royalblue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  facet_wrap(~kintamasis, scales = "free_x") +
+  theme_bw() +
+  labs(title = "Kainos ryšys su kitais kintamaisiais",
+       x = "Reikšmė",
+       y = "Kaina")
+```
