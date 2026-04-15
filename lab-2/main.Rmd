@@ -3,6 +3,8 @@ library(tidyverse)
 library(corrplot)
 library(ggplot2)
 library(patchwork)
+library(mgcv)
+library(qgam)
 ```
 
 ```{r}
@@ -175,27 +177,145 @@ gg_loess_lnd_sqfoot <- ggplot(data, aes(x = LND_SQFOOT, y = SALE_PRC)) +
 (gg_loess_lvg_area + gg_loess_age) / (gg_loess_spec_val + gg_loess_lnd_sqfoot)
 ```
 
+### DIST 4 požymiai
 
 ```{r}
 gg_loess_rail_dist <- ggplot(data, aes(x = RAIL_DIST, y = SALE_PRC)) +
-  geom_point() +
+  geom_point(size = .8, alpha = .5) +
   theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
+  geom_smooth(method = "loess", span = 0.75, color = "red")
 
 gg_loess_ocean_dist <- ggplot(data, aes(x = OCEAN_DIST, y = SALE_PRC)) +
-  geom_point() +
+  geom_point(size = .8, alpha = .5) +
   theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
+  geom_smooth(method = "loess", span = 0.75, color = "red")
 
 gg_loess_spec_cntr_dist <- ggplot(data, aes(x = CNTR_DIST, y = SALE_PRC)) +
-  geom_point() +
+  geom_point(size = .8, alpha = .5) +
   theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
+  geom_smooth(method = "loess", span = 0.75, color = "red")
 
 gg_loess_hwy_dist <- ggplot(data, aes(x = HWY_DIST, y = SALE_PRC)) +
-  geom_point() +
+  geom_point(size = .8, alpha = .5) +
   theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
+  geom_smooth(method = "loess", span = 0.75, color = "red")
 
 (gg_loess_rail_dist + gg_loess_ocean_dist) / (gg_loess_spec_cntr_dist + gg_loess_hwy_dist)
 ```
+
+#### Pilnas
+
+```{r}
+gam_model <- gam(SALE_PRC ~ s(RAIL_DIST, k=18) + s(OCEAN_DIST, k=20) + s(CNTR_DIST, k=15) + s(HWY_DIST, k=15), 
+                 data = data, 
+                 method = "REML")
+```
+
+```{r}
+plot(gam_model, pages = 1, shade = TRUE, residuals = TRUE)
+summary(gam_model)
+```
+
+
+```{r}
+gam.check(gam_model)
+```
+
+```{r}
+plot(gam_model, select = 1, residuals = TRUE, 
+     col = "gray70", pch = 16, cex = 0.4)
+
+p <- predict(gam_model, type = "terms", se.fit = TRUE)
+x_val <- data$RAIL_DIST
+y_val <- p$fit[, "s(RAIL_DIST)"]
+
+ord <- order(x_val)
+lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
+#===============================================================================
+plot(gam_model, select = 2, residuals = TRUE, 
+     col = "gray70", pch = 16, cex = 0.4)
+
+p <- predict(gam_model, type = "terms", se.fit = TRUE)
+x_val <- data$OCEAN_DIST
+y_val <- p$fit[, "s(OCEAN_DIST)"]
+
+ord <- order(x_val)
+lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
+#===============================================================================
+plot(gam_model, select = 3, residuals = TRUE, 
+     col = "gray70", pch = 16, cex = 0.4)
+
+p <- predict(gam_model, type = "terms", se.fit = TRUE)
+x_val <- data$CNTR_DIST
+y_val <- p$fit[, "s(CNTR_DIST)"]
+
+ord <- order(x_val)
+lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
+#===============================================================================
+plot(gam_model, select = 4, residuals = TRUE, 
+     col = "gray70", pch = 16, cex = 0.4)
+
+p <- predict(gam_model, type = "terms", se.fit = TRUE)
+x_val <- data$HWY_DIST
+y_val <- p$fit[, "s(HWY_DIST)"]
+
+ord <- order(x_val)
+lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
+```
+
+#### q0.1
+
+```{r}
+fit_0.1 <- qgam(SALE_PRC ~ s(RAIL_DIST, k = 15) + s(OCEAN_DIST, k = 15) + s(CNTR_DIST, k = 15) + s(HWY_DIST), 
+                   qu = 0.1, 
+                   data = data)
+```
+
+```{r}
+plot(fit_0.1, pages = 1, shade = TRUE, residuals = TRUE)
+summary(fit_0.1)
+```
+
+```{r}
+gam.check(fit_0.1)
+```
+
+
+#### q0.9
+
+```{r}
+fit_0.9 <- qgam(SALE_PRC ~ s(RAIL_DIST, k=20) + s(OCEAN_DIST, k=20) + s(CNTR_DIST, k=20) + s(HWY_DIST, k=20), 
+                   qu = 0.9, 
+                   data = data)
+```
+
+```{r}
+plot(fit_0.9, pages = 1, shade = TRUE, residuals = TRUE)
+summary(fit_0.9)
+```
+
+```{r}
+gam.check(fit_0.9)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
