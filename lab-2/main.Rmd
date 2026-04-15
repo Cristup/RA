@@ -100,6 +100,29 @@ char <- data %>%
 char
 ```
 
+## Kokybinių kintamųjų analizė
+
+```{r}
+table(data$age)
+```
+
+```{r}
+table(data$avno60plus)
+```
+
+```{r}
+table(data$structure_quality)
+```
+
+```{r}
+table(data$structure_quality, data$avno60plus)
+```
+
+```{r}
+filtered_data <- data %>% 
+  filter(age <= 80)
+```
+
 
 ## Sąryšiai
 
