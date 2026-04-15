@@ -151,3 +151,51 @@ numeric_values %>%
        y = "Dažnis")
 ```
 
+```{r}
+gg_loess_age <- ggplot(data, aes(x = age, y = SALE_PRC)) +
+  geom_point() +
+  theme_bw() +
+  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+gg_loess_lvg_area <- ggplot(data, aes(x = TOT_LVG_AREA, y = SALE_PRC)) +
+  geom_point() +
+  theme_bw() +
+  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+gg_loess_spec_val <- ggplot(data, aes(x = SPEC_FEAT_VAL, y = SALE_PRC)) +
+  geom_point() +
+  theme_bw() +
+  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+gg_loess_lnd_sqfoot <- ggplot(data, aes(x = LND_SQFOOT, y = SALE_PRC)) +
+  geom_point() +
+  theme_bw() +
+  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+(gg_loess_lvg_area + gg_loess_age) / (gg_loess_spec_val + gg_loess_lnd_sqfoot)
+```
+
+
+```{r}
+gg_loess_rail_dist <- ggplot(data, aes(x = RAIL_DIST, y = SALE_PRC)) +
+  geom_point() +
+  theme_bw() +
+  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+gg_loess_ocean_dist <- ggplot(data, aes(x = OCEAN_DIST, y = SALE_PRC)) +
+  geom_point() +
+  theme_bw() +
+  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+gg_loess_spec_cntr_dist <- ggplot(data, aes(x = CNTR_DIST, y = SALE_PRC)) +
+  geom_point() +
+  theme_bw() +
+  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+gg_loess_hwy_dist <- ggplot(data, aes(x = HWY_DIST, y = SALE_PRC)) +
+  geom_point() +
+  theme_bw() +
+  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+(gg_loess_rail_dist + gg_loess_ocean_dist) / (gg_loess_spec_cntr_dist + gg_loess_hwy_dist)
+```
