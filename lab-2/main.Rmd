@@ -5,6 +5,9 @@ library(ggplot2)
 library(patchwork)
 library(mgcv)
 library(qgam)
+library(quantreg)
+library(car)
+library(splines)
 ```
 
 ```{r}
@@ -15,7 +18,6 @@ str(data)
 ```{r}
 sum(is.na(data))
 ```
-
 
 # Pradinė analizė
 
@@ -125,14 +127,12 @@ filtered_data <- data %>%
   filter(age <= 80)
 ```
 
-
 ## Sąryšiai
 
 ```{r}
 ggplot(data, aes(x = SALE_PRC)) +
   geom_histogram(color = "black", fill = "royalblue")
 ```
-
 
 ```{r}
 numeric_values <- data %>% 
@@ -160,7 +160,6 @@ numeric_values %>%
        x = "Reikšmė",
        y = "Kaina")
 ```
-
 
 ```{r}
 numeric_values %>%
@@ -203,22 +202,22 @@ gg_loess_lnd_sqfoot <- ggplot(data, aes(x = LND_SQFOOT, y = SALE_PRC)) +
 ### DIST 4 požymiai
 
 ```{r}
-gg_loess_rail_dist <- ggplot(data, aes(x = RAIL_DIST, y = SALE_PRC)) +
+gg_loess_rail_dist <- ggplot(data, aes(x = RAIL_DIST, y = log(SALE_PRC))) +
   geom_point(size = .8, alpha = .5) +
   theme_bw() +
   geom_smooth(method = "loess", span = 0.75, color = "red")
 
-gg_loess_ocean_dist <- ggplot(data, aes(x = OCEAN_DIST, y = SALE_PRC)) +
+gg_loess_ocean_dist <- ggplot(data, aes(x = OCEAN_DIST, y = log(SALE_PRC))) +
   geom_point(size = .8, alpha = .5) +
   theme_bw() +
   geom_smooth(method = "loess", span = 0.75, color = "red")
 
-gg_loess_spec_cntr_dist <- ggplot(data, aes(x = CNTR_DIST, y = SALE_PRC)) +
+gg_loess_spec_cntr_dist <- ggplot(data, aes(x = CNTR_DIST, y = log(SALE_PRC))) +
   geom_point(size = .8, alpha = .5) +
   theme_bw() +
   geom_smooth(method = "loess", span = 0.75, color = "red")
 
-gg_loess_hwy_dist <- ggplot(data, aes(x = HWY_DIST, y = SALE_PRC)) +
+gg_loess_hwy_dist <- ggplot(data, aes(x = HWY_DIST, y = log(SALE_PRC))) +
   geom_point(size = .8, alpha = .5) +
   theme_bw() +
   geom_smooth(method = "loess", span = 0.75, color = "red")
@@ -238,7 +237,6 @@ gam_model <- gam(SALE_PRC ~ s(RAIL_DIST, k=18) + s(OCEAN_DIST, k=20) + s(CNTR_DI
 plot(gam_model, pages = 1, shade = TRUE, residuals = TRUE)
 summary(gam_model)
 ```
-
 
 ```{r}
 gam.check(gam_model)
@@ -286,11 +284,11 @@ ord <- order(x_val)
 lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
 ```
 
-#### q0.1
+#### q0.25
 
 ```{r}
 fit_0.1 <- qgam(SALE_PRC ~ s(RAIL_DIST, k = 15) + s(OCEAN_DIST, k = 15) + s(CNTR_DIST, k = 15) + s(HWY_DIST), 
-                   qu = 0.1, 
+                   qu = 0.25, 
                    data = data)
 ```
 
@@ -303,12 +301,11 @@ summary(fit_0.1)
 gam.check(fit_0.1)
 ```
 
-
-#### q0.9
+#### q0.75
 
 ```{r}
 fit_0.9 <- qgam(SALE_PRC ~ s(RAIL_DIST, k=20) + s(OCEAN_DIST, k=20) + s(CNTR_DIST, k=20) + s(HWY_DIST, k=20), 
-                   qu = 0.9, 
+                   qu = 0.75, 
                    data = data)
 ```
 
@@ -321,24 +318,70 @@ summary(fit_0.9)
 gam.check(fit_0.9)
 ```
 
+```{r}
+fit_ols <- lm(SALE_PRC ~ RAIL_DIST, data = data)
+fit_q <- rq(SALE_PRC ~ RAIL_DIST, tau = c(0.1, 0.5, 0.9), data = data)
+```
 
+```{r eval=FALSE, warning=FALSE, include=FALSE}
+fit_all <- rq(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age, tau = seq(0.05, 0.95, by = 0.05), data = data)
+plot(summary(fit_all))
+```
 
+![](http://127.0.0.1:32726/chunk_output/9EF3120858f074f8/AD519075/c4h05mka1spcj/000010.png)
 
+```{r}
+lm_mdl <- lm(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age + WATER_DIST + as.factor(structure_quality) + as.factor(avno60plus), data = data)
+vif(lm_mdl)
+```
 
+```{r}
+qgam_mdl <- qgam(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age, 
+                   qu = 0.90, 
+                   data = data)
+```
 
+```{r}
+rq_mdl <- rq(log(SALE_PRC) ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + ns(HWY_DIST, df=3) + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + age + as.factor(structure_quality) + as.factor(avno60plus), tau = 0.9, data = data)
+```
 
+```{r}
+#summary(qgam_mdl)
+summary(rq_mdl)
+```
 
+```{r}
+fit_ns <- rq(log(SALE_PRC) ~ ns(HWY_DIST, df = 3), data = data, tau = 0.9)
+# Generate a sequence of weights for prediction
+plot_data <- data.frame(HWY_DIST = seq(min(data$HWY_DIST), max(data$HWY_DIST), length.out = 100))
 
+# Predict values
+plot_data$pred <- exp(predict(fit_ns, newdata = plot_data))
 
+# Plotting
+plot(data$HWY_DIST, data$SALE_PRC, pch = 19, col = "gray", main = "Quantile Spline Regression")
+lines(plot_data$HWY_DIST, plot_data$pred, col = "blue", lwd = 2)
+```
 
+```{r}
+pred <- predict(rq_mdl, newdata = data)
+actual <- log(data$SALE_PRC)
 
+mae <- mean(abs(actual - pred))
+mae
 
+rmse <- sqrt(mean((actual - pred)^2))
+rmse
 
+cor(pred, actual)
+```
 
-
-
-
-
-
-
-
+```{r}
+ggplot(data, aes(x = log(SALE_PRC), y = pred)) +
+  geom_point(alpha = 0.3, color = "darkblue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Kvantilinė regresija (tau = 0.9): Tikros vs Prognozuotos kainos",
+       x = "Tikra kaina (SALE_PRC)",
+       y = "Prognozuota kaina (0.9 kvantilis)") +
+  theme_minimal()
+```
