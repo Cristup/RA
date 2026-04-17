@@ -1,5 +1,6 @@
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
+library(tidymodels)
 library(corrplot)
 library(ggplot2)
 library(patchwork)
@@ -19,12 +20,6 @@ str(data)
 sum(is.na(data))
 ```
 
-# Pradinė analizė
-
-```{r}
-str(data)
-```
-
 ```{r}
 set.seed(1)
 
@@ -35,6 +30,15 @@ train_data <- train_data %>% slice_sample(prop = 1)
 test_data  <- testing(data_split)
 test_data <- test_data %>% slice_sample(prop = 1)
 ```
+
+
+
+# Pradinė analizė
+
+```{r}
+str(data)
+```
+
 
 
 ## Išskirtys
