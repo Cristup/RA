@@ -345,8 +345,10 @@ qgam_mdl <- qgam(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_
                    data = data)
 ```
 
+-------------------
+
 ```{r}
-rq_mdl <- rq(log(SALE_PRC) ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + ns(HWY_DIST, df=3) + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + age + as.factor(structure_quality), tau = 0.75, data = train_data)
+rq_mdl <- rq(log(SALE_PRC) ~ ns(OCEAN_DIST, df =3) + ns(CNTR_DIST, df =4) + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + age + as.factor(structure_quality), tau = 0.9, data = train_data)
 ```
 
 ```{r}
@@ -355,16 +357,16 @@ summary(rq_mdl)
 ```
 
 ```{r}
-fit_ns <- rq(log(SALE_PRC) ~ ns(HWY_DIST, df = 3), data = data, tau = 0.9)
+fit_ns <- rq(log(SALE_PRC) ~ ns(age, df =4), data = data, tau = 0.9)
 # Generate a sequence of weights for prediction
-plot_data <- data.frame(HWY_DIST = seq(min(data$HWY_DIST), max(data$HWY_DIST), length.out = 100))
+plot_data <- data.frame(age = seq(min(data$age), max(data$age), length.out = 100))
 
 # Predict values
 plot_data$pred <- exp(predict(fit_ns, newdata = plot_data))
 
 # Plotting
-plot(data$HWY_DIST, data$SALE_PRC, pch = 19, col = "gray", main = "Quantile Spline Regression")
-lines(plot_data$HWY_DIST, plot_data$pred, col = "blue", lwd = 2)
+plot(data$age, data$SALE_PRC, pch = 19, col = "gray", main = "Quantile Spline Regression")
+lines(plot_data$age, plot_data$pred, col = "blue", lwd = 2)
 ```
 
 ```{r}
@@ -383,10 +385,28 @@ mean(actual <= pred)
 
 
 res <- resid(rq_mdl)
-mod_nl <- rq(log(SALE_PRC) ~ 1, tau = 0.75, data = train_data)
+mod_nl <- rq(log(SALE_PRC) ~ 1, tau = 0.9, data = train_data)
 rsd_nl <- resid(mod_nl)
 
-goodfit(res, rsd_nl, 0.75)
+goodfit(res, rsd_nl, 0.9)
+```
+
+```         
+[1] 0.3405887 
+[1] 0.4336913 
+[1] 0.848482 
+[1] 0.8967001 
+[1] 0.6353105
+```
+
+be splainu
+
+```         
+[1] 0.3410027 
+[1] 0.4357152 
+[1] 0.8456548 
+[1] 0.8959828 
+[1] 0.6337275 
 ```
 
 ## TOT_LVG_AREA
@@ -513,7 +533,7 @@ plot(gam_model, se = TRUE, col = "red", lwd = 2)
 ```
 
 ```{r}
-ggplot(test_data, aes(x = SALE_PRC, y =e pred)) +
+ggplot(test_data, aes(x = log(SALE_PRC), y =pred)) +
   geom_point(alpha = 0.3, color = "darkblue") +
   geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
   labs(title = "Kvantilinė regresija (tau = 0.9): Tikros vs Prognozuotos kainos",
