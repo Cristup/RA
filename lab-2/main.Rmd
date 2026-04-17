@@ -9,6 +9,7 @@ library(qgam)
 library(quantreg)
 library(car)
 library(splines)
+library(WRTDStidal)
 ```
 
 ```{r}
@@ -31,15 +32,11 @@ test_data  <- testing(data_split)
 test_data <- test_data %>% slice_sample(prop = 1)
 ```
 
-
-
 # Pradinė analizė
 
 ```{r}
 str(data)
 ```
-
-
 
 ## Išskirtys
 
@@ -349,7 +346,7 @@ qgam_mdl <- qgam(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_
 ```
 
 ```{r}
-rq_mdl <- rq(log(SALE_PRC) ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + ns(HWY_DIST, df=3) + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + age + as.factor(structure_quality) + as.factor(avno60plus), tau = 0.9, data = data)
+rq_mdl <- rq(log(SALE_PRC) ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + ns(HWY_DIST, df=3) + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + age + as.factor(structure_quality), tau = 0.75, data = train_data)
 ```
 
 ```{r}
@@ -371,8 +368,8 @@ lines(plot_data$HWY_DIST, plot_data$pred, col = "blue", lwd = 2)
 ```
 
 ```{r}
-pred <- predict(rq_mdl, newdata = data)
-actual <- log(data$SALE_PRC)
+pred <- predict(rq_mdl, newdata = test_data)
+actual <- log(test_data$SALE_PRC)
 
 mae <- mean(abs(actual - pred))
 mae
@@ -381,10 +378,18 @@ rmse <- sqrt(mean((actual - pred)^2))
 rmse
 
 cor(pred, actual)
+
+mean(actual <= pred)
+
+
+res <- resid(rq_mdl)
+mod_nl <- rq(log(SALE_PRC) ~ 1, tau = 0.75, data = train_data)
+rsd_nl <- resid(mod_nl)
+
+goodfit(res, rsd_nl, 0.75)
 ```
 
 ## TOT_LVG_AREA
-
 
 ```{r fig.height=5, fig.width=10}
 gg_loess_tot_lvg_area <- ggplot(data, aes(x = TOT_LVG_AREA, y = SALE_PRC)) +
@@ -401,13 +406,11 @@ gg_loess_water_dist <- ggplot(data, aes(x = WATER_DIST, y = SALE_PRC)) +
 gg_loess_tot_lvg_area + gg_loess_water_dist
 ```
 
-
 ### Splainai
 
 ```{r}
 library(splines)
 ```
-
 
 ```{r}
 plot(filtered_data$TOT_LVG_AREA, filtered_data$SALE_PRC, 
@@ -444,7 +447,6 @@ fit_smooth <- smooth.spline(filtered_data$TOT_LVG_AREA, filtered_data$SALE_PRC, 
 lines(fit_smooth, col = "purple", lwd = 2)
 ```
 
-
 ### Kvantilių regresija
 
 ```{r}
@@ -472,7 +474,6 @@ lines(TOT_LVG_AREA_grid, res90, col = "red", lwd = 2, lty = 2)
 legend("topleft", legend = c("90-asis kvantilis", "Mediana", "10-asis kvantilis"),
        col = c("red", "black", "blue"), lty = c(2, 1, 2), lwd = 2)
 ```
-
 
 ## WATER
 
@@ -511,9 +512,8 @@ par(mfrow = c(1, 2))
 plot(gam_model, se = TRUE, col = "red", lwd = 2)
 ```
 
-
 ```{r}
-ggplot(data, aes(x = log(SALE_PRC), y = pred)) +
+ggplot(test_data, aes(x = SALE_PRC, y =e pred)) +
   geom_point(alpha = 0.3, color = "darkblue") +
   geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
   labs(title = "Kvantilinė regresija (tau = 0.9): Tikros vs Prognozuotos kainos",
