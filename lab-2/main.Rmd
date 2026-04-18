@@ -70,7 +70,7 @@ count_outliers <- function(data, var_name) {
 
 numeric_cols <- data %>% 
   dplyr::select(where(is.numeric)) %>% 
-  dplyr::select(-LATITUDE, -LONGITUDE, -PARCELNO, -avno60plus) %>% 
+  dplyr::select(-LATITUDE, -LONGITUDE, -PARCELNO) %>% 
   names()
 
 results_list <- lapply(numeric_cols, function(col) count_outliers(data, col))
@@ -106,7 +106,7 @@ ggsave(filename = "boxplot_3x.png", width = 5.4, height = 2.5, units = "in", dpi
 
 ```{r}
 data_long <- data %>%
-  dplyr::select(-LATITUDE, -LONGITUDE, -PARCELNO, -avno60plus, -age) %>%
+  dplyr::select(-LATITUDE, -LONGITUDE, -PARCELNO, -avno60plus, -month_sold, -structure_quality) %>%
   pivot_longer(
     cols = everything(), 
     names_to = "variable", 
@@ -213,17 +213,63 @@ ggsave(filename = "sklaida.png", width = 6.7, height = 4, units = "in", dpi = 30
 ```
 
 
+# Modelis
+
+```{r}
+linear_model <- lm(SALE_PRC ~ LND_SQFOOT+TOT_LVG_AREA+SPEC_FEAT_VAL+RAIL_DIST+OCEAN_DIST+WATER_DIST+CNTR_DIST+SUBCNTR_DI+HWY_DIST+age+structure_quality, data=train_data)
+vif(linear_model)
+```
+
+## Verslo centro modelis
+
+```{r}
+cntr_model <- rq(SALE_PRC ~ 
+                   log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+log(CNTR_DIST)+log(HWY_DIST)+structure_quality, 
+                 data=train_data, tau = 0.9)
+
+summary(cntr_model)
+```
+
+```{r}
+pred <- predict(cntr_model, newdata = test_data)
+actual <- test_data$SALE_PRC
+
+mae <- mean(abs(actual - pred))
+rmse <- sqrt(mean((actual - pred)^2))
+rho <- cor(pred, actual, method='spearman')
+
+pataikyta <- mean(actual <= pred)
+
+res <- resid(cntr_model)
+mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
+rsd_nl <- resid(mod_nl)
+
+pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2)
+```
+
+```{r}
+ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
+  geom_point(alpha = 0.3, color = "darkblue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Tikros ir prognozuotos kainos",
+       x = "Tikra kaina",
+       y = "Prognozuota kaina (0,9 kvantilis)") +
+  theme_minimal()
+```
 
 
 
 
 
+```{r}
+qs <- 1:9/10
+qr2 <- rq(SALE_PRC ~ LND_SQFOOT+TOT_LVG_AREA+SPEC_FEAT_VAL+RAIL_DIST+OCEAN_DIST+WATER_DIST+CNTR_DIST+SUBCNTR_DI+HWY_DIST+age+structure_quality, data=train_data, tau = qs)
 
-
-
-
-
-
+plot(summary(qr2))
+summary(qr2)
+```
 
 
 
