@@ -260,9 +260,6 @@ ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
 ```
 
 
-
-
-
 ```{r}
 qs <- 1:9/10
 qr2 <- rq(SALE_PRC ~ LND_SQFOOT+TOT_LVG_AREA+SPEC_FEAT_VAL+RAIL_DIST+OCEAN_DIST+WATER_DIST+CNTR_DIST+SUBCNTR_DI+HWY_DIST+age+structure_quality, data=train_data, tau = qs)
@@ -270,6 +267,55 @@ qr2 <- rq(SALE_PRC ~ LND_SQFOOT+TOT_LVG_AREA+SPEC_FEAT_VAL+RAIL_DIST+OCEAN_DIST+
 plot(summary(qr2))
 summary(qr2)
 ```
+
+## Rajono centro modelis
+
+```{r}
+subcntr_model <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
+                            log(SUBCNTR_DI)+log(HWY_DIST)+structure_quality, 
+                 data=train_data, tau = 0.9)
+
+summary(subcntr_model)
+```
+
+```{r}
+pred <- predict(subcntr_model, newdata = test_data)
+actual <- test_data$SALE_PRC
+
+mae <- mean(abs(actual - pred))
+rmse <- sqrt(mean((actual - pred)^2))
+rho <- cor(pred, actual, method='spearman')
+
+pataikyta <- mean(actual <= pred)
+
+res <- resid(subcntr_model)
+mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
+rsd_nl <- resid(mod_nl)
+
+pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2)
+```
+
+```{r}
+ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
+  geom_point(alpha = 0.3, color = "darkblue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Tikros ir prognozuotos kainos",
+       x = "Tikra kaina",
+       y = "Prognozuota kaina (0,9 kvantilis)") +
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
