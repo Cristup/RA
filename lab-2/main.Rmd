@@ -167,7 +167,7 @@ ggplot(data, aes(x = SALE_PRC)) +
   scale_x_continuous(labels = label_number(scale = 1e-6)) + 
   theme_bw() +
   labs(title = "Kainos pasiskirstymas",
-       x = "Kaina (mln.)",
+       x = "Kaina (mln. USD)",
        y = "Dažnis")
 
 #ggsave(filename = "atsakas-histograma.png", width = 5.4, height = 3, units = "in", dpi = 300)
@@ -191,9 +191,9 @@ numeric_values <- data %>%
     "Statinio amžius" = age
   )
 
-#cor_matrix <- cor(numeric_values, method = "spearman", use = "complete.obs")
+cor_matrix <- cor(numeric_values, method = "spearman", use = "complete.obs")
 
-png(filename = "corr_heatmap.png", width = 57, height = 4.5, units = "in", res = 300)
+#png(filename = "corr_heatmap.png", width = 57, height = 4.5, units = "in", res = 300)
 
 options(OutDec = ",")
 corrplot(cor_matrix, 
@@ -208,25 +208,18 @@ options(OutDec = ".")
 
 #dev.off()
 ```
+```{r}
+numeric_values
+```
+
+
 
 ```{r message=FALSE, warning=FALSE}
 numeric_values %>%
-  pivot_longer(cols = -SALE_PRC, 
+  pivot_longer(cols = -`Pardavimo kaina`, 
                names_to = "kintamasis", 
                values_to = "reiksme") %>%
-  mutate(kintamasis = case_match(kintamasis,
-    "LND_SQFOOT"    ~ "Žemės plotas",
-    "TOT_LVG_AREA"  ~ "Bendras plotas",
-    "SPEC_FEAT_VAL" ~ "Papildomų objektų vertė",
-    "RAIL_DIST"     ~ "Atstumas (stotis)",
-    "OCEAN_DIST"    ~ "Atstumas (jūra)",
-    "WATER_DIST"    ~ "Atstumas (vandens telkinys)",
-    "CNTR_DIST"     ~ "Atstumas (verslo rajono)",
-    "SUBCNTR_DI"    ~ "Atstumas (rajono centras)",
-    "HWY_DIST"      ~ "Atstumas (greitkelis)",
-    "age"           ~ "Statinio amžius"
-  )) %>%
-  ggplot(aes(x = reiksme, y = SALE_PRC)) +
+  ggplot(aes(x = reiksme, y = `Pardavimo kaina`)) +
   geom_point(alpha = 0.4, size = 0.95, color = "royalblue") +
   geom_quantile(quantiles = 0.5, color = "orange", linewidth = 0.75) + 
   geom_quantile(quantiles = 0.1, color = "cyan2", linewidth = 0.6) + 
@@ -241,7 +234,7 @@ numeric_values %>%
     axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(subtitle = "Oranžinė - mediana, žydra - 10 %, Žalia - 90 % kvantilis",
        x = "Reikšmė",
-       y = "Kaina (mln.)")
+       y = "Kaina (mln., USD)")
 
 #ggsave(filename = "sklaida.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
