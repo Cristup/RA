@@ -358,9 +358,12 @@ res <- resid(subcntr_model)
 mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
 rsd_nl <- resid(mod_nl)
 
+aic <- AIC(subcntr_model)
+
+
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2)
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
 ```
 
 ```{r}
@@ -374,25 +377,139 @@ ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
 ```
 
 
+# Sąveikos
+
+
+```{r}
+model1 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
+                            log(SUBCNTR_DI)+log(HWY_DIST) + structure_quality + TOT_LVG_AREA : log(LND_SQFOOT), 
+                 data=train_data, tau = 0.9)
+
+summary(model1)
+```
+
+```{r}
+pred <- predict(model1, newdata = test_data)
+actual <- test_data$SALE_PRC
+
+mae <- mean(abs(actual - pred))
+rmse <- sqrt(mean((actual - pred)^2))
+rho <- cor(pred, actual, method='spearman')
+
+pataikyta <- mean(actual <= pred)
+
+res <- resid(model1)
+mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
+rsd_nl <- resid(mod_nl)
+
+aic <- AIC(model1)
+
+pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
+```
+
+
+```{r}
+model2 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
+                            log(SUBCNTR_DI)+log(HWY_DIST) + structure_quality + TOT_LVG_AREA : log(SPEC_FEAT_VAL+1), 
+                 data=train_data, tau = 0.9)
+
+summary(model2)
+```
+
+```{r}
+pred <- predict(model2, newdata = test_data)
+actual <- test_data$SALE_PRC
+
+mae <- mean(abs(actual - pred))
+rmse <- sqrt(mean((actual - pred)^2))
+rho <- cor(pred, actual, method='spearman')
+
+pataikyta <- mean(actual <= pred)
+
+res <- resid(model2)
+mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
+rsd_nl <- resid(mod_nl)
+
+aic <- AIC(model2)
+
+pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
+```
+
+
+```{r}
+model3 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
+                            log(SUBCNTR_DI)+log(HWY_DIST) + structure_quality + TOT_LVG_AREA : log(OCEAN_DIST), 
+                 data=train_data, tau = 0.9)
+
+summary(model3)
+```
+
+```{r}
+pred <- predict(model3, newdata = test_data)
+actual <- test_data$SALE_PRC
+
+mae <- mean(abs(actual - pred))
+rmse <- sqrt(mean((actual - pred)^2))
+rho <- cor(pred, actual, method='spearman')
+
+pataikyta <- mean(actual <= pred)
+
+res <- resid(model3)
+mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
+rsd_nl <- resid(mod_nl)
+
+aic <- AIC(model3)
+
+pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
+```
 
 
 
+```{r}
+model4 <- rq(SALE_PRC ~ log(LND_SQFOOT)+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
+                            log(HWY_DIST) + structure_quality + TOT_LVG_AREA * log(SUBCNTR_DI), 
+                 data=train_data, tau = 0.9)
+
+summary(model4)
+```
+
+```{r}
+pred <- predict(model4, newdata = test_data)
+actual <- test_data$SALE_PRC
+
+mae <- mean(abs(actual - pred))
+rmse <- sqrt(mean((actual - pred)^2))
+rho <- cor(pred, actual, method='spearman')
+
+pataikyta <- mean(actual <= pred)
+
+res <- resid(model4)
+mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
+rsd_nl <- resid(mod_nl)
+
+aic <- AIC(model4)
+
+pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
+```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```{r}
+ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
+  geom_point(alpha = 0.3, color = "darkblue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Tikros ir prognozuotos kainos",
+       x = "Tikra kaina",
+       y = "Prognozuota kaina (0,9 kvantilis)") +
+  theme_minimal()
+```
 
 
 
