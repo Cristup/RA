@@ -161,17 +161,23 @@ table(data$structure_quality, data$avno60plus)
 
 ## Sąryšiai
 
+
 ```{r}
 ggplot(data, aes(x = SALE_PRC)) +
   geom_histogram(color = "white", fill = "royalblue", bins = 50) + 
+  geom_vline(aes(xintercept = quantile(SALE_PRC, 0.9)),
+             color = "red", linetype = "dashed", linewidth = 1) +
+  annotate("text", x = quantile(data$SALE_PRC, 0.9) + 400000, y = 2000, 
+           label = "90 % kvantilis", vjust = 2, color = "red", size = 4) +
   scale_x_continuous(labels = label_number(scale = 1e-6)) + 
   theme_bw() +
-  labs(title = "Kainos pasiskirstymas",
+  labs(subtitle = "Raudona brūkšninė linija žymi 90 % visų stebėjimų kainos ribą",
        x = "Kaina (mln., USD)",
        y = "Dažnis")
 
-#ggsave(filename = "atsakas-histograma.png", width = 5.4, height = 3, units = "in", dpi = 300)
+ggsave(filename = "atsakas-histograma.png", width = 5.4, height = 3, units = "in", dpi = 300)
 ```
+
 
 ```{r}
 numeric_values <- data %>% 
