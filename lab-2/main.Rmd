@@ -422,7 +422,7 @@ pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
 loss_value <- pinball_loss(actual, pred, 0.9)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\nVidutinė kvantilių paklaida: ", loss_value)
 ```
 
 # Sąveikos
@@ -458,7 +458,9 @@ aic <- AIC(final_model)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
+loss_value <- pinball_loss(actual, pred, 0.9)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\nVidutinė kvantilių paklaida: ", loss_value)
 ```
 
 
@@ -471,6 +473,26 @@ ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
        y = "Prognozuota kaina (0,9 kvantilis)") +
   theme_minimal()
 ```
+
+```{r}
+train_res <- residuals(final_model)
+train_fit <- predict(final_model)
+
+plot_train <- data.frame(
+  index = 1:length(train_res),
+  fitted = train_fit,
+  residuals = train_res)
+
+ggplot(plot_train, aes(x = index, y = residuals)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Mokymo duomenų liekanos pagal indeksą",
+       x = "Indeksas", y = "Liekana") +
+  theme_bw()
+```
+
+
+
 
 ### Kryžminė patikra
 
@@ -498,8 +520,6 @@ for(i in 1:k) {
 
 mean(cv_scores)
 ```
-
-
 
 
 
