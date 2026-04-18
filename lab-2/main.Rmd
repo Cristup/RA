@@ -169,7 +169,7 @@ ggplot(data, aes(x = SALE_PRC)) +
 ```{r}
 numeric_values <- data %>% 
   dplyr::select(where(is.numeric)) %>% 
-  dplyr::select(-'LATITUDE', -'LONGITUDE', -'PARCELNO', -'avno60plus')
+  dplyr::select(-'LATITUDE', -'LONGITUDE', -'PARCELNO')
 
 cor <- cor(numeric_values, method = "spearman")
 corrplot(cor, method = "color", addCoef.col = "black", tl.cex = 0.7, number.cex = 0.45)
@@ -212,194 +212,229 @@ numeric_values %>%
 ggsave(filename = "sklaida.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+
+# SENI BANDYMAI
+
+
 ```{r}
-numeric_values %>%
-  pivot_longer(cols = everything(), 
-               names_to = "kintamasis", 
-               values_to = "reiksme") %>%
-  ggplot(aes(x = reiksme)) +
-  geom_histogram(fill = "royalblue", color = "black", bins = 30) +
-  facet_wrap(~kintamasis, scales = "free") + 
-  theme_bw() +
-  labs(title = "Skaitinių kintamųjų pasiskirstymai (Histogramos)",
-       x = "Reikšmė",
-       y = "Dažnis")
+#gg_loess_age <- ggplot(data, aes(x = age, y = SALE_PRC)) +
+#  geom_point() +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+#gg_loess_lvg_area <- ggplot(data, aes(x = TOT_LVG_AREA, y = SALE_PRC)) +
+#  geom_point() +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+#gg_loess_spec_val <- ggplot(data, aes(x = SPEC_FEAT_VAL, y = SALE_PRC)) +
+#  geom_point() +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+#gg_loess_lnd_sqfoot <- ggplot(data, aes(x = LND_SQFOOT, y = SALE_PRC)) +
+#  geom_point() +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "blue")
+
+#(gg_loess_lvg_area + gg_loess_age) / (gg_loess_spec_val + gg_loess_lnd_sqfoot)
+```
+
+DIST 4 požymiai
+
+```{r}
+#gg_loess_rail_dist <- ggplot(data, aes(x = RAIL_DIST, y = log(SALE_PRC))) +
+#  geom_point(size = .8, alpha = .5) +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "red")
+
+#gg_loess_ocean_dist <- ggplot(data, aes(x = OCEAN_DIST, y = log(SALE_PRC))) +
+#  geom_point(size = .8, alpha = .5) +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "red")
+
+#gg_loess_spec_cntr_dist <- ggplot(data, aes(x = CNTR_DIST, y = log(SALE_PRC))) +
+#  geom_point(size = .8, alpha = .5) +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "red")
+
+#gg_loess_hwy_dist <- ggplot(data, aes(x = HWY_DIST, y = log(SALE_PRC))) +
+#  geom_point(size = .8, alpha = .5) +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "red")
+
+#(gg_loess_rail_dist + gg_loess_ocean_dist) / (gg_loess_spec_cntr_dist + gg_loess_hwy_dist)
+```
+
+Pilnas
+
+```{r}
+#gam_model <- gam(SALE_PRC ~ s(RAIL_DIST, k=18) + s(OCEAN_DIST, k=20) + s(CNTR_DIST, k=15) + s(HWY_DIST, k=15), 
+#                 data = data, 
+#                 method = "REML")
 ```
 
 ```{r}
-gg_loess_age <- ggplot(data, aes(x = age, y = SALE_PRC)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
-
-gg_loess_lvg_area <- ggplot(data, aes(x = TOT_LVG_AREA, y = SALE_PRC)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
-
-gg_loess_spec_val <- ggplot(data, aes(x = SPEC_FEAT_VAL, y = SALE_PRC)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
-
-gg_loess_lnd_sqfoot <- ggplot(data, aes(x = LND_SQFOOT, y = SALE_PRC)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
-
-(gg_loess_lvg_area + gg_loess_age) / (gg_loess_spec_val + gg_loess_lnd_sqfoot)
-```
-
-### DIST 4 požymiai
-
-```{r}
-gg_loess_rail_dist <- ggplot(data, aes(x = RAIL_DIST, y = log(SALE_PRC))) +
-  geom_point(size = .8, alpha = .5) +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "red")
-
-gg_loess_ocean_dist <- ggplot(data, aes(x = OCEAN_DIST, y = log(SALE_PRC))) +
-  geom_point(size = .8, alpha = .5) +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "red")
-
-gg_loess_spec_cntr_dist <- ggplot(data, aes(x = CNTR_DIST, y = log(SALE_PRC))) +
-  geom_point(size = .8, alpha = .5) +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "red")
-
-gg_loess_hwy_dist <- ggplot(data, aes(x = HWY_DIST, y = log(SALE_PRC))) +
-  geom_point(size = .8, alpha = .5) +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "red")
-
-(gg_loess_rail_dist + gg_loess_ocean_dist) / (gg_loess_spec_cntr_dist + gg_loess_hwy_dist)
-```
-
-#### Pilnas
-
-```{r}
-gam_model <- gam(SALE_PRC ~ s(RAIL_DIST, k=18) + s(OCEAN_DIST, k=20) + s(CNTR_DIST, k=15) + s(HWY_DIST, k=15), 
-                 data = data, 
-                 method = "REML")
+#plot(gam_model, pages = 1, shade = TRUE, residuals = TRUE)
+#summary(gam_model)
 ```
 
 ```{r}
-plot(gam_model, pages = 1, shade = TRUE, residuals = TRUE)
-summary(gam_model)
+#gam.check(gam_model)
 ```
 
 ```{r}
-gam.check(gam_model)
-```
+#plot(gam_model, select = 1, residuals = TRUE, 
+#     col = "gray70", pch = 16, cex = 0.4)
 
-```{r}
-plot(gam_model, select = 1, residuals = TRUE, 
-     col = "gray70", pch = 16, cex = 0.4)
+#p <- predict(gam_model, type = "terms", se.fit = TRUE)
+#x_val <- data$RAIL_DIST
+#y_val <- p$fit[, "s(RAIL_DIST)"]
 
-p <- predict(gam_model, type = "terms", se.fit = TRUE)
-x_val <- data$RAIL_DIST
-y_val <- p$fit[, "s(RAIL_DIST)"]
-
-ord <- order(x_val)
-lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
+#ord <- order(x_val)
+#lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
 #===============================================================================
-plot(gam_model, select = 2, residuals = TRUE, 
-     col = "gray70", pch = 16, cex = 0.4)
+#plot(gam_model, select = 2, residuals = TRUE, 
+#     col = "gray70", pch = 16, cex = 0.4)
 
-p <- predict(gam_model, type = "terms", se.fit = TRUE)
-x_val <- data$OCEAN_DIST
-y_val <- p$fit[, "s(OCEAN_DIST)"]
+#p <- predict(gam_model, type = "terms", se.fit = TRUE)
+#x_val <- data$OCEAN_DIST
+#y_val <- p$fit[, "s(OCEAN_DIST)"]
 
-ord <- order(x_val)
-lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
+#ord <- order(x_val)
+#lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
 #===============================================================================
-plot(gam_model, select = 3, residuals = TRUE, 
-     col = "gray70", pch = 16, cex = 0.4)
+#plot(gam_model, select = 3, residuals = TRUE, 
+#     col = "gray70", pch = 16, cex = 0.4)
 
-p <- predict(gam_model, type = "terms", se.fit = TRUE)
-x_val <- data$CNTR_DIST
-y_val <- p$fit[, "s(CNTR_DIST)"]
+#p <- predict(gam_model, type = "terms", se.fit = TRUE)
+#x_val <- data$CNTR_DIST
+#y_val <- p$fit[, "s(CNTR_DIST)"]
 
-ord <- order(x_val)
-lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
+#ord <- order(x_val)
+#lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
 #===============================================================================
-plot(gam_model, select = 4, residuals = TRUE, 
-     col = "gray70", pch = 16, cex = 0.4)
+#plot(gam_model, select = 4, residuals = TRUE, 
+#     col = "gray70", pch = 16, cex = 0.4)
 
-p <- predict(gam_model, type = "terms", se.fit = TRUE)
-x_val <- data$HWY_DIST
-y_val <- p$fit[, "s(HWY_DIST)"]
+#p <- predict(gam_model, type = "terms", se.fit = TRUE)
+#x_val <- data$HWY_DIST
+#y_val <- p$fit[, "s(HWY_DIST)"]
 
-ord <- order(x_val)
-lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
+#ord <- order(x_val)
+#lines(x_val[ord], y_val[ord], col = "red", lwd = 2)
 ```
 
 ```{r}
-fit_ols <- lm(SALE_PRC ~ RAIL_DIST, data = data)
-fit_q <- rq(SALE_PRC ~ RAIL_DIST, tau = c(0.1, 0.5, 0.9), data = data)
+#fit_ols <- lm(SALE_PRC ~ RAIL_DIST, data = data)
+#fit_q <- rq(SALE_PRC ~ RAIL_DIST, tau = c(0.1, 0.5, 0.9), data = data)
 ```
 
 ```{r eval=FALSE, warning=FALSE, include=FALSE}
-fit_all <- rq(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age, tau = seq(0.05, 0.95, by = 0.05), data = data)
-plot(summary(fit_all))
+#fit_all <- rq(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age, tau = seq(0.05, 0.95, by = 0.05), data = data)
+#plot(summary(fit_all))
 ```
 
 ```{r}
-lm_mdl <- lm(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age + WATER_DIST + as.factor(structure_quality) + as.factor(avno60plus), data = data)
-vif(lm_mdl)
+#lm_mdl <- lm(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age + WATER_DIST + as.factor(structure_quality) + as.factor(avno60plus), data = data)
+#vif(lm_mdl)
 ```
 
 ```{r}
-qgam_mdl <- qgam(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age, 
-                   qu = 0.90, 
-                   data = data)
+#qgam_mdl <- qgam(SALE_PRC ~ OCEAN_DIST + RAIL_DIST + CNTR_DIST + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + WATER_DIST + SUBCNTR_DI + age, 
+#                   qu = 0.90, 
+#                   data = data)
 ```
 
 ------------------------------------------------------------------------
 
 ```{r}
-rq_mdl <- rq(log(SALE_PRC) ~ ns(OCEAN_DIST, df =3) + ns(CNTR_DIST, df =4) + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + age + as.factor(structure_quality), tau = 0.9, data = train_data)
+#rq_mdl <- rq(log(SALE_PRC) ~ ns(OCEAN_DIST, df =3) + ns(CNTR_DIST, df =4) + HWY_DIST + LND_SQFOOT + TOT_LVG_AREA + SPEC_FEAT_VAL + age + as.factor(structure_quality), tau = 0.9, data = train_data)
 ```
 
 ```{r}
 #summary(qgam_mdl)
-summary(rq_mdl)
+#summary(rq_mdl)
 ```
 
 ```{r}
-fit_ns <- rq(log(SALE_PRC) ~ ns(age, df =4), data = data, tau = 0.9)
+#fit_ns <- rq(log(SALE_PRC) ~ ns(age, df =4), data = data, tau = 0.9)
 # Generate a sequence of weights for prediction
-plot_data <- data.frame(age = seq(min(data$age), max(data$age), length.out = 100))
+#plot_data <- data.frame(age = seq(min(data$age), max(data$age), length.out = 100))
 
 # Predict values
-plot_data$pred <- exp(predict(fit_ns, newdata = plot_data))
+#plot_data$pred <- exp(predict(fit_ns, newdata = plot_data))
 
 # Plotting
-plot(data$age, data$SALE_PRC, pch = 19, col = "gray", main = "Quantile Spline Regression")
-lines(plot_data$age, plot_data$pred, col = "blue", lwd = 2)
+#plot(data$age, data$SALE_PRC, pch = 19, col = "gray", main = "Quantile Spline Regression")
+#lines(plot_data$age, plot_data$pred, col = "blue", lwd = 2)
 ```
 
 ```{r}
-pred <- predict(rq_mdl, newdata = test_data)
-actual <- log(test_data$SALE_PRC)
+#pred <- predict(rq_mdl, newdata = test_data)
+#actual <- log(test_data$SALE_PRC)
 
-mae <- mean(abs(actual - pred))
-mae
+#mae <- mean(abs(actual - pred))
+#mae
 
-rmse <- sqrt(mean((actual - pred)^2))
-rmse
+#rmse <- sqrt(mean((actual - pred)^2))
+#rmse
 
-cor(pred, actual)
+#cor(pred, actual)
 
-mean(actual <= pred)
+#mean(actual <= pred)
 
 
-res <- resid(rq_mdl)
-mod_nl <- rq(log(SALE_PRC) ~ 1, tau = 0.9, data = train_data)
-rsd_nl <- resid(mod_nl)
+#res <- resid(rq_mdl)
+#mod_nl <- rq(log(SALE_PRC) ~ 1, tau = 0.9, data = train_data)
+#rsd_nl <- resid(mod_nl)
 
-goodfit(res, rsd_nl, 0.9)
+#goodfit(res, rsd_nl, 0.9)
 ```
 
 ```         
@@ -420,135 +455,135 @@ be splainu
 [1] 0.6337275 
 ```
 
-## TOT_LVG_AREA
+TOT_LVG_AREA
 
 ```{r fig.height=5, fig.width=10}
-gg_loess_tot_lvg_area <- ggplot(data, aes(x = TOT_LVG_AREA, y = SALE_PRC)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
+#gg_loess_tot_lvg_area <- ggplot(data, aes(x = TOT_LVG_AREA, y = SALE_PRC)) +
+#  geom_point() +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "blue")
 
-gg_loess_water_dist <- ggplot(data, aes(x = WATER_DIST, y = SALE_PRC)) +
-  geom_point() +
-  theme_bw() +
-  geom_smooth(method = "loess", span = 0.75, color = "blue")
+#gg_loess_water_dist <- ggplot(data, aes(x = WATER_DIST, y = SALE_PRC)) +
+#  geom_point() +
+#  theme_bw() +
+#  geom_smooth(method = "loess", span = 0.75, color = "blue")
 
 
-gg_loess_tot_lvg_area + gg_loess_water_dist
+#gg_loess_tot_lvg_area + gg_loess_water_dist
 ```
 
-### Splainai
+Splainai
 
 ```{r}
-library(splines)
+#library(splines)
 ```
 
 ```{r}
-plot(filtered_data$TOT_LVG_AREA, filtered_data$SALE_PRC, 
-     col = "grey", 
-     pch = 20, 
-     main = "Kainos priklausomybė nuo ploto (Splainas)",
-     xlab = "Plotas (kv. pėdos)", 
-     ylab = "Kaina ($)")
+#plot(filtered_data$TOT_LVG_AREA, filtered_data$SALE_PRC, 
+#     col = "grey", 
+#     pch = 20, 
+#     main = "Kainos priklausomybė nuo ploto (Splainas)",
+#     xlab = "Plotas (kv. pėdos)", 
+#     ylab = "Kaina ($)")
 
 # TIESINIS MODELIS
-model_simple <- lm(SALE_PRC ~ TOT_LVG_AREA, data = filtered_data)
-abline(model_simple, col = "blue", lwd = 2)
+#model_simple <- lm(SALE_PRC ~ TOT_LVG_AREA, data = filtered_data)
+#abline(model_simple, col = "blue", lwd = 2)
 
 # NETARALUS SPLAINAS
-model_ns <- lm(SALE_PRC ~ ns(TOT_LVG_AREA , df = 4), data = filtered_data)
-TOT_LVG_AREA_range <- range(filtered_data$TOT_LVG_AREA)
-TOT_LVG_AREA_grid <- seq(from = TOT_LVG_AREA_range[1], to = TOT_LVG_AREA_range[2])
+#model_ns <- lm(SALE_PRC ~ ns(TOT_LVG_AREA , df = 4), data = filtered_data)
+#TOT_LVG_AREA_range <- range(filtered_data$TOT_LVG_AREA)
+#TOT_LVG_AREA_grid <- seq(from = TOT_LVG_AREA_range[1], to = TOT_LVG_AREA_range[2])
 
-model_ns_predict <- predict(model_ns , newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid), se = T)
+#model_ns_predict <- predict(model_ns , newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid), se = T)
 
-lines(TOT_LVG_AREA_grid , model_ns_predict$fit , col = "red", lwd = 2)
+#lines(TOT_LVG_AREA_grid , model_ns_predict$fit , col = "red", lwd = 2)
 
-lines(TOT_LVG_AREA_grid, model_ns_predict$fit + 2*model_ns_predict$se.fit, lty = "dashed", col = "red")
-lines(TOT_LVG_AREA_grid, model_ns_predict$fit - 2*model_ns_predict$se.fit, lty = "dashed", col = "red")
+#lines(TOT_LVG_AREA_grid, model_ns_predict$fit + 2*model_ns_predict$se.fit, lty = "dashed", col = "red")
+#lines(TOT_LVG_AREA_grid, model_ns_predict$fit - 2*model_ns_predict$se.fit, lty = "dashed", col = "red")
 
 # REGRESIJOS SPLAINAI
-model_bs <- lm(SALE_PRC ~ bs(TOT_LVG_AREA, df = 4), data = filtered_data)
-pred_bs <- predict(model_bs, newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid))
+#model_bs <- lm(SALE_PRC ~ bs(TOT_LVG_AREA, df = 4), data = filtered_data)
+#pred_bs <- predict(model_bs, newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid))
 
-lines(TOT_LVG_AREA_grid, pred_bs, col = "darkgreen", lwd = 2)
+#lines(TOT_LVG_AREA_grid, pred_bs, col = "darkgreen", lwd = 2)
 
 # GLODIEJI SPLAINAI
-fit_smooth <- smooth.spline(filtered_data$TOT_LVG_AREA, filtered_data$SALE_PRC, cv = TRUE)
-lines(fit_smooth, col = "purple", lwd = 2)
+#fit_smooth <- smooth.spline(filtered_data$TOT_LVG_AREA, filtered_data$SALE_PRC, cv = TRUE)
+#lines(fit_smooth, col = "purple", lwd = 2)
 ```
 
-### Kvantilių regresija
+Kvantilių regresija
 
 ```{r}
-library(quantreg)
-```
-
-```{r}
-fit10 <- rq(SALE_PRC ~ TOT_LVG_AREA, tau = 0.1, data = filtered_data)
-fit50 <- rq(SALE_PRC ~ TOT_LVG_AREA, tau = 0.5, data = filtered_data)
-fit90 <- rq(SALE_PRC ~ TOT_LVG_AREA, tau = 0.9, data = filtered_data)
-
-res10 <- predict(fit10, newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid))
-res50 <- predict(fit50, newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid))
-res90 <- predict(fit90, newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid))
-
-plot(filtered_data$TOT_LVG_AREA, filtered_data$SALE_PRC, 
-     col = "lightgrey", pch = 20, 
-     main = "Kvantilių regresija: Plotas vs Kaina",
-     xlab = "Plotas", ylab = "Kaina")
-
-lines(TOT_LVG_AREA_grid, res10, col = "blue", lwd = 2, lty = 2)
-lines(TOT_LVG_AREA_grid, res50, col = "black", lwd = 3)
-lines(TOT_LVG_AREA_grid, res90, col = "red", lwd = 2, lty = 2)
-
-legend("topleft", legend = c("90-asis kvantilis", "Mediana", "10-asis kvantilis"),
-       col = c("red", "black", "blue"), lty = c(2, 1, 2), lwd = 2)
-```
-
-## WATER
-
-```{r}
-model_double_ns <- lm(SALE_PRC ~ ns(WATER_DIST, df = 4) + ns(TOT_LVG_AREA, df = 4), data = filtered_data)
-
-water_range <- range(filtered_data$WATER_DIST, na.rm = TRUE)
-water_grid <- seq(from = water_range[1], to = water_range[2], length.out = 1000)
-
-preds_water <- predict(model_water_ns, newdata = list(WATER_DIST = water_grid), se = TRUE)
-
-plot(filtered_data$WATER_DIST, filtered_data$SALE_PRC, 
-     col = "grey", pch = 20, alpha = 0.3,
-     main = "Kainos priklausomybė nuo atstumo iki vandens (Natūralusis splainas)",
-     xlab = "Atstumas iki vandens (metrai)", 
-     ylab = "Kaina ($)")
-
-lines(water_grid, preds_water$fit, col = "red", lwd = 3)
-
-lines(water_grid, preds_water$fit + 2*preds_water$se.fit, lty = "dashed", col = "red")
-lines(water_grid, preds_water$fit - 2*preds_water$se.fit, lty = "dashed", col = "red")
-
-abline(lm(SALE_PRC ~ WATER_DIST, data = filtered_data), col = "blue", lwd = 2, lty = 3)
-
-legend("topright", legend = c("Natūralusis splainas", "95% pasikl. interv.", "Tiesinė regresija"),
-       col = c("red", "red", "blue"), lty = c(1, 2, 3), lwd = 2)
-```
-
-## TOT_LVG_AREA and WATER
-
-```{r}
-library(mgcv)
-gam_model <- gam(SALE_PRC ~ s(WATER_DIST, k = 4) + s(TOT_LVG_AREA, k = 4), data = filtered_data)
-
-par(mfrow = c(1, 2))
-plot(gam_model, se = TRUE, col = "red", lwd = 2)
+#library(quantreg)
 ```
 
 ```{r}
-ggplot(test_data, aes(x = log(SALE_PRC), y =pred)) +
-  geom_point(alpha = 0.3, color = "darkblue") +
-  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  labs(title = "Kvantilinė regresija (tau = 0.9): Tikros vs Prognozuotos kainos",
-       x = "Tikra kaina (SALE_PRC)",
-       y = "Prognozuota kaina (0.9 kvantilis)") +
-  theme_minimal()
+#fit10 <- rq(SALE_PRC ~ TOT_LVG_AREA, tau = 0.1, data = filtered_data)
+#fit50 <- rq(SALE_PRC ~ TOT_LVG_AREA, tau = 0.5, data = filtered_data)
+#fit90 <- rq(SALE_PRC ~ TOT_LVG_AREA, tau = 0.9, data = filtered_data)
+
+#res10 <- predict(fit10, newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid))
+#res50 <- predict(fit50, newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid))
+#res90 <- predict(fit90, newdata = list(TOT_LVG_AREA = TOT_LVG_AREA_grid))
+
+#plot(filtered_data$TOT_LVG_AREA, filtered_data$SALE_PRC, 
+#     col = "lightgrey", pch = 20, 
+#     main = "Kvantilių regresija: Plotas vs Kaina",
+#     xlab = "Plotas", ylab = "Kaina")
+
+#lines(TOT_LVG_AREA_grid, res10, col = "blue", lwd = 2, lty = 2)
+#lines(TOT_LVG_AREA_grid, res50, col = "black", lwd = 3)
+#lines(TOT_LVG_AREA_grid, res90, col = "red", lwd = 2, lty = 2)
+
+#legend("topleft", legend = c("90-asis kvantilis", "Mediana", "10-asis kvantilis"),
+#       col = c("red", "black", "blue"), lty = c(2, 1, 2), lwd = 2)
+```
+
+WATER
+
+```{r}
+#model_double_ns <- lm(SALE_PRC ~ ns(WATER_DIST, df = 4) + ns(TOT_LVG_AREA, df = 4), data = filtered_data)
+
+#water_range <- range(filtered_data$WATER_DIST, na.rm = TRUE)
+#water_grid <- seq(from = water_range[1], to = water_range[2], length.out = 1000)
+
+#preds_water <- predict(model_water_ns, newdata = list(WATER_DIST = water_grid), se = TRUE)
+
+#plot(filtered_data$WATER_DIST, filtered_data$SALE_PRC, 
+#     col = "grey", pch = 20, alpha = 0.3,
+#     main = "Kainos priklausomybė nuo atstumo iki vandens (Natūralusis splainas)",
+#     xlab = "Atstumas iki vandens (metrai)", 
+#     ylab = "Kaina ($)")
+
+#lines(water_grid, preds_water$fit, col = "red", lwd = 3)
+
+#lines(water_grid, preds_water$fit + 2*preds_water$se.fit, lty = "dashed", col = "red")
+#lines(water_grid, preds_water$fit - 2*preds_water$se.fit, lty = "dashed", col = "red")
+
+#abline(lm(SALE_PRC ~ WATER_DIST, data = filtered_data), col = "blue", lwd = 2, lty = 3)
+
+#legend("topright", legend = c("Natūralusis splainas", "95% pasikl. interv.", "Tiesinė regresija"),
+#       col = c("red", "red", "blue"), lty = c(1, 2, 3), lwd = 2)
+```
+
+TOT_LVG_AREA and WATER
+
+```{r}
+#library(mgcv)
+#gam_model <- gam(SALE_PRC ~ s(WATER_DIST, k = 4) + s(TOT_LVG_AREA, k = 4), data = filtered_data)
+
+#par(mfrow = c(1, 2))
+#plot(gam_model, se = TRUE, col = "red", lwd = 2)
+```
+
+```{r}
+#ggplot(test_data, aes(x = log(SALE_PRC), y =pred)) +
+#  geom_point(alpha = 0.3, color = "darkblue") +
+#  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+#  labs(title = "Kvantilinė regresija (tau = 0.9): Tikros vs Prognozuotos kainos",
+#       x = "Tikra kaina (SALE_PRC)",
+#       y = "Prognozuota kaina (0.9 kvantilis)") +
+#  theme_minimal()
 ```
