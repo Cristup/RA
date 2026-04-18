@@ -167,7 +167,7 @@ ggplot(data, aes(x = SALE_PRC)) +
   scale_x_continuous(labels = label_number(scale = 1e-6)) + 
   theme_bw() +
   labs(title = "Kainos pasiskirstymas",
-       x = "Kaina (mln. USD)",
+       x = "Kaina (mln., USD)",
        y = "Dažnis")
 
 #ggsave(filename = "atsakas-histograma.png", width = 5.4, height = 3, units = "in", dpi = 300)
