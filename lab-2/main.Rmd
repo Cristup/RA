@@ -17,6 +17,16 @@ library(scales)
 data <- read.csv("../datasets/miami-housing.csv")
 str(data)
 ```
+```{r}
+data <- data %>%
+  mutate(
+    structure_quality = as.factor(structure_quality),
+    month_sold = as.factor(month_sold),
+    avno60plus = as.factor(avno60plus)
+  )
+```
+
+
 
 ```{r}
 sum(is.na(data))
@@ -60,7 +70,7 @@ count_outliers <- function(data, var_name) {
 
 numeric_cols <- data %>% 
   dplyr::select(where(is.numeric)) %>% 
-  select(-LATITUDE, -LONGITUDE, -PARCELNO, -avno60plus) %>% 
+  dplyr::select(-LATITUDE, -LONGITUDE, -PARCELNO, -avno60plus) %>% 
   names()
 
 results_list <- lapply(numeric_cols, function(col) count_outliers(data, col))
@@ -96,7 +106,7 @@ ggsave(filename = "boxplot_3x.png", width = 5.4, height = 2.5, units = "in", dpi
 
 ```{r}
 data_long <- data %>%
-  select(-LATITUDE, -LONGITUDE, -PARCELNO, -avno60plus, -age) %>%
+  dplyr::select(-LATITUDE, -LONGITUDE, -PARCELNO, -avno60plus, -age) %>%
   pivot_longer(
     cols = everything(), 
     names_to = "variable", 
@@ -165,22 +175,41 @@ cor <- cor(numeric_values, method = "spearman")
 corrplot(cor, method = "color", addCoef.col = "black", tl.cex = 0.7, number.cex = 0.45)
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 numeric_values %>%
   pivot_longer(cols = -SALE_PRC, 
                names_to = "kintamasis", 
                values_to = "reiksme") %>%
+  mutate(kintamasis = case_match(kintamasis,
+    "LND_SQFOOT"    ~ "Žemės plotas",
+    "TOT_LVG_AREA"  ~ "Bendras plotas",
+    "SPEC_FEAT_VAL" ~ "Papildomų objektų vertė",
+    "RAIL_DIST"     ~ "Atstumas (stotis)",
+    "OCEAN_DIST"    ~ "Atstumas (jūra)",
+    "WATER_DIST"    ~ "Atstumas (vandens telkinys)",
+    "CNTR_DIST"     ~ "Atstumas (verslo rajono)",
+    "SUBCNTR_DI"    ~ "Atstumas (rajono centras)",
+    "HWY_DIST"      ~ "Atstumas (greitkelis)",
+    "age"           ~ "Statinio amžius"
+  )) %>%
   ggplot(aes(x = reiksme, y = SALE_PRC)) +
-  geom_point(alpha = 0.4, color = "royalblue") +
-  geom_smooth(method = "lm", color = "red", se = FALSE, linetype = "dashed") + 
-  geom_quantile(quantiles = 0.5, color = "orange2", linewidth = 0.8) + 
-  geom_quantile(quantiles = c(0.1, 0.90), color = "cyan2", linewidth = 0.8) + 
-  facet_wrap(~kintamasis, scales = "free_x") +
+  geom_point(alpha = 0.4, size = 0.95, color = "royalblue") +
+  geom_quantile(quantiles = 0.5, color = "orange", linewidth = 0.75) + 
+  geom_quantile(quantiles = 0.1, color = "cyan2", linewidth = 0.6) + 
+  geom_quantile(quantiles = 0.9, color = "green", linewidth = 0.6) + 
+  facet_wrap(~kintamasis, scales = "free_x", ncol = 5) +
+  scale_y_continuous(labels = label_number(scale = 1e-6)) +
+  coord_cartesian(ylim = c(0, 3000000)) +
   theme_bw() +
-  labs(title = "Kainos ryšys su kitais kintamaisiais",
-       subtitle = "Raudona (brūkšninė) - vidurkis, orandžinė - mediana, Cyan  - 10 % ir 90 % kvantiliai",
+  theme(
+    strip.background = element_rect(fill = "grey95"),
+    strip.text = element_text(size = 7),
+    axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(subtitle = "Oranžinė - mediana, žydra - 10 %, Žalia - 90 % kvantilis",
        x = "Reikšmė",
-       y = "Kaina")
+       y = "Kaina (mln.)")
+
+ggsave(filename = "sklaida.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
 
 ```{r}
