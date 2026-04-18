@@ -163,7 +163,12 @@ table(data$structure_quality, data$avno60plus)
 
 ```{r}
 ggplot(data, aes(x = SALE_PRC)) +
-  geom_histogram(color = "black", fill = "royalblue")
+  geom_histogram(color = "black", fill = "royalblue", bins = 50) + 
+  scale_x_continuous(labels = label_number(scale = 1e-6)) + 
+  theme_bw() +
+  labs(title = "Kainos pasiskirstymas",
+       x = "Kaina (mln.)",
+       y = "Dažnis")
 ```
 
 ```{r}
