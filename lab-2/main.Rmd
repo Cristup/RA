@@ -17,6 +17,7 @@ library(scales)
 data <- read.csv("../datasets/miami-housing.csv")
 str(data)
 ```
+
 ```{r}
 data <- data %>%
   mutate(
@@ -25,8 +26,6 @@ data <- data %>%
     avno60plus = as.factor(avno60plus)
   )
 ```
-
-
 
 ```{r}
 sum(is.na(data))
@@ -161,7 +160,6 @@ table(data$structure_quality, data$avno60plus)
 
 ## Sąryšiai
 
-
 ```{r}
 ggplot(data, aes(x = SALE_PRC)) +
   geom_histogram(color = "white", fill = "royalblue", bins = 50) + 
@@ -179,7 +177,6 @@ ggplot(data, aes(x = SALE_PRC)) +
 
 #ggsave(filename = "atsakas-histograma.png", width = 5.4, height = 3, units = "in", dpi = 300)
 ```
-
 
 ```{r}
 numeric_values <- data %>% 
@@ -216,11 +213,10 @@ options(OutDec = ".")
 
 #dev.off()
 ```
+
 ```{r}
 numeric_values
 ```
-
-
 
 ```{r message=FALSE, warning=FALSE}
 numeric_values %>%
@@ -279,18 +275,23 @@ p3 <- ggplot(data, aes(x = 1/(HWY_DIST + 0.001), y = SALE_PRC)) +
 (p0 + p1) / (p2 + p3)
 ```
 
-
 ```{r}
 cor(log(test_data$CNTR_DIST), log(test_data$SUBCNTR_DI), use = "complete.obs")
 ```
-
-
 
 # Modelis
 
 ```{r}
 linear_model <- lm(SALE_PRC ~  log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+log(CNTR_DIST)+log(SUBCNTR_DI)+log(HWY_DIST) + structure_quality, data=train_data)
 vif(linear_model)
+```
+
+```{r}
+pinball_loss <- function(y_true, y_pred, tau) {
+  error <- y_true - y_pred
+  loss <- ifelse(error >= 0, tau * error, (tau - 1) * error)
+  return(mean(loss))
+}
 ```
 
 ## Verslo centro modelis
@@ -321,7 +322,9 @@ rsd_nl <- resid(mod_nl)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2)
+loss_value <- pinball_loss(actual, pred, 0.9)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\n Vidutinė kvantilių paklaida: ", loss_value)
 ```
 
 ```{r}
@@ -333,7 +336,6 @@ ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
        y = "Prognozuota kaina (0,9 kvantilis)") +
   theme_minimal()
 ```
-
 
 ```{r}
 qs <- 1:9/10
@@ -372,7 +374,9 @@ aic <- AIC(subcntr_model)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
+loss_value <- pinball_loss(actual, pred, 0.9)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
 ```
 
 ```{r}
@@ -416,12 +420,12 @@ aic <- AIC(model)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
+loss_value <- pinball_loss(actual, pred, 0.9)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
 ```
 
-
 # Sąveikos
-
 
 ```{r}
 model1 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
@@ -449,9 +453,10 @@ aic <- AIC(model1)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
-```
+loss_value <- pinball_loss(actual, pred, 0.9)
 
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
+```
 
 ```{r}
 model2 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
@@ -479,9 +484,10 @@ aic <- AIC(model2)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
-```
+loss_value <- pinball_loss(actual, pred, 0.9)
 
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
+```
 
 ```{r}
 model3 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
@@ -509,10 +515,10 @@ aic <- AIC(model3)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
+loss_value <- pinball_loss(actual, pred, 0.9)
+
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
 ```
-
-
 
 ```{r}
 model4 <- rq(SALE_PRC ~ log(LND_SQFOOT)+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
@@ -540,9 +546,10 @@ aic <- AIC(model4)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic)
-```
+loss_value <- pinball_loss(actual, pred, 0.9)
 
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
+```
 
 ```{r}
 ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
@@ -554,30 +561,36 @@ ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
   theme_minimal()
 ```
 
+### Kryžminė patikra
 
+```{r}
+set.seed(123)
+k <- 5
+data <- data[sample(nrow(data)), ]
+folds <- cut(seq(1, nrow(data)), breaks = k, labels = FALSE)
 
+cv_scores <- numeric(k)
 
+for(i in 1:k) {
+  test_indices <- which(folds == i, arr.ind = TRUE)
+  train_data_cv <- data[-test_indices, ]
+  test_data_cv <- data[test_indices, ]
+  
+  fit <- rq(SALE_PRC ~ log(LND_SQFOOT)+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
+                            log(HWY_DIST) + structure_quality + TOT_LVG_AREA * log(SUBCNTR_DI), 
+            tau = 0.9, data = train_data_cv)
+  
+  preds <- predict(fit, newdata = test_data_cv)
+  
+  cv_scores[i] <- pinball_loss(test_data_cv$SALE_PRC, preds, 0.9)
+}
 
+mean(cv_scores)
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---------------------------------------------------------------------------------
+------------------------------------------------------------------------
 
 # SENI BANDYMAI
-
 
 ```{r}
 #gg_loess_age <- ggplot(data, aes(x = age, y = SALE_PRC)) +
