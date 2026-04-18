@@ -163,21 +163,50 @@ table(data$structure_quality, data$avno60plus)
 
 ```{r}
 ggplot(data, aes(x = SALE_PRC)) +
-  geom_histogram(color = "black", fill = "royalblue", bins = 50) + 
+  geom_histogram(color = "white", fill = "royalblue", bins = 50) + 
   scale_x_continuous(labels = label_number(scale = 1e-6)) + 
   theme_bw() +
   labs(title = "Kainos pasiskirstymas",
        x = "Kaina (mln.)",
        y = "Dažnis")
+
+#ggsave(filename = "atsakas-histograma.png", width = 5.4, height = 3, units = "in", dpi = 300)
 ```
 
 ```{r}
 numeric_values <- data %>% 
   dplyr::select(where(is.numeric)) %>% 
-  dplyr::select(-'LATITUDE', -'LONGITUDE', -'PARCELNO')
+  dplyr::select(-LATITUDE, -LONGITUDE, -PARCELNO) %>%
+  rename(
+    "Pardavimo kaina" = SALE_PRC,
+    "Žemės plotas" = LND_SQFOOT,
+    "Bendras plotas" = TOT_LVG_AREA,
+    "Papildomų objektų vertė" = SPEC_FEAT_VAL,
+    "Atstumas (stotis)" = RAIL_DIST,
+    "Atstumas (jūra)" = OCEAN_DIST,
+    "Atstumas (vandens telkinys)" = WATER_DIST,
+    "Atstumas (verslo rajono)" = CNTR_DIST,
+    "Atstumas (rajono centras)" = SUBCNTR_DI,
+    "Atstumas (greitkelis)" = HWY_DIST,
+    "Statinio amžius" = age
+  )
 
-cor <- cor(numeric_values, method = "spearman")
-corrplot(cor, method = "color", addCoef.col = "black", tl.cex = 0.7, number.cex = 0.45)
+#cor_matrix <- cor(numeric_values, method = "spearman", use = "complete.obs")
+
+png(filename = "corr_heatmap.png", width = 57, height = 4.5, units = "in", res = 300)
+
+options(OutDec = ",")
+corrplot(cor_matrix, 
+         method = "color", 
+         addCoef.col = "black", 
+         tl.col = "black",
+         tl.cex = 0.75,
+         number.cex = 0.55,
+         type = 'lower',
+         diag = FALSE)
+options(OutDec = ".")
+
+#dev.off()
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -214,7 +243,7 @@ numeric_values %>%
        x = "Reikšmė",
        y = "Kaina (mln.)")
 
-ggsave(filename = "sklaida.png", width = 6.7, height = 4, units = "in", dpi = 300)
+#ggsave(filename = "sklaida.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
 
 ```{r}
