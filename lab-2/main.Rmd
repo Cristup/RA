@@ -529,6 +529,37 @@ for (i in 1:length(lt_titles)) {
 ```
 
 
+# Kovariančių svarba
+
+```{r}
+train_data_std <- train_data
+
+train_data_std$LND_SQFOOT_std   <- scale(log(train_data$LND_SQFOOT))
+train_data_std$TOT_LVG_AREA_std <- scale(train_data$TOT_LVG_AREA)
+train_data_std$SPEC_FEAT_std    <- scale(log(train_data$SPEC_FEAT_VAL + 1))
+train_data_std$OCEAN_DIST_std   <- scale(log(train_data$OCEAN_DIST))
+train_data_std$SUBCNTR_DI_std   <- scale(log(train_data$SUBCNTR_DI))
+train_data_std$CNTR_DIST_std    <- scale(log(train_data$CNTR_DIST))
+train_data_std$HWY_DIST_std     <- scale(log(train_data$HWY_DIST))
+
+final_model_std <- rq(log(SALE_PRC) ~ 
+                        LND_SQFOOT_std + 
+                        TOT_LVG_AREA_std + 
+                        SPEC_FEAT_std + 
+                        OCEAN_DIST_std + 
+                        SUBCNTR_DI_std + 
+                        CNTR_DIST_std + 
+                        HWY_DIST_std + 
+                        structure_quality + 
+                        CNTR_DIST_std:TOT_LVG_AREA_std, 
+                      data = train_data_std, tau = 0.9)
+
+summary(final_model_std, se = "boot")
+
+sort(abs(coef(final_model_std)), decreasing = TRUE)
+```
+
+
 ### Kryžminė patikra
 
 ```{r}
