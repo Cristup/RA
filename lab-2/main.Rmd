@@ -438,6 +438,21 @@ final_model <- rq(SALE_PRC ~
 summary(final_model)
 
 ```
+```{r}
+# Ištraukia koeficientus ir jų intervalus
+rezultatai <- summary(final_model, se = "boot")$coefficients
+
+# Sukuria apatines ir viršutines ribas
+lower <- rezultatai[,1] - 1.96 * rezultatai[,2]
+upper <- rezultatai[,1] + 1.96 * rezultatai[,2]
+
+# Sujungia į vieną objektą
+tavo_lentele <- cbind(rezultatai[,1], lower, upper)
+colnames(tavo_lentele) <- c("Beta", "Lower_95", "Upper_95")
+print(tavo_lentele)
+```
+
+
 
 
 ```{r}
