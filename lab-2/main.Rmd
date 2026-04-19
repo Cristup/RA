@@ -671,3 +671,35 @@ mean(cv_scores_loss)
 mean(cv_scores_goodfit)
 ```
 
+
+# Prognozė
+
+```{r}
+new_house <- data.frame(
+  TOT_LVG_AREA = 5032,
+  LND_SQFOOT = 50530,
+  SPEC_FEAT_VAL = 50926,
+  CNTR_DIST = 10560,
+  OCEAN_DIST = 36018.6,
+  SUBCNTR_DI = 27494.6,
+  HWY_DIST = 2212,
+  structure_quality = factor(4)
+)
+
+prediction <- predict(final_model, newdata = new_house)
+print(prediction)
+```
+
+pėdų: 5280 --> 3770939
+per vieną plotas --> 3771812 
+
+```{r}
+3770939 - 3771812
+```
+
+2 kart pėdų: 10560 --> 3093006
+per vieną plotas --> 3093706 
+
+```{r}
+3093006 - 3093706
+```
