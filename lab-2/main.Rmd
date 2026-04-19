@@ -505,7 +505,7 @@ ggplot(plot_train, aes(x = index, y = residuals)) +
   theme_bw()
 ```
 
-```{r}
+```{r fig.width=10}
 qs <- 1:9/10
 qr2 <- rq(SALE_PRC ~ log(LND_SQFOOT) + TOT_LVG_AREA + log(SPEC_FEAT_VAL+1) + log(OCEAN_DIST) + log(SUBCNTR_DI) + 
                      log(CNTR_DIST) + log(HWY_DIST) + structure_quality + log(CNTR_DIST):TOT_LVG_AREA,
@@ -516,10 +516,35 @@ summary(qr2)
 ```
 
 ```{r}
-par(mfrow = c(1, 1))
-plot(summary(qr2), parm = "log(LND_SQFOOT)")
-```
+lt_titles <- c(
+  "(Intercept)" = "Intercept",
+  "log(LND_SQFOOT)" = "log(Žemės plotas)",
+  "TOT_LVG_AREA" = "Bendras plotas",
+  "log(SPEC_FEAT_VAL + 1)" = "log(Papildomų objektų vertė)",
+  "log(OCEAN_DIST)" = "log(Atstumas iki jūros)",
+  "log(SUBCNTR_DI)" = "log(Atstumas iki rajono centro)",
+  "log(CNTR_DIST)" = "log(Atstumas iki verslo rajono)",
+  "log(HWY_DIST)" = "log(Atstumas iki greitkelio)",
+  "structure_quality2" = "Statinio kokybė: 2",
+  "structure_quality3" = "Statinio kokybė: 3",
+  "structure_quality4" = "Statinio kokybė: 4",
+  "structure_quality5" = "Statinio kokybė: 5",
+  "TOT_LVG_AREA:log(CNTR_DIST)" = "Bendras plotas : Atstumas iki centro (sąveika)"
+)
 
+par(mfrow = c(1, 1))
+
+for (i in 1:length(lt_titles)) {
+  en_name <- names(lt_titles)[i]
+  lt_name <- lt_titles[i]
+  
+  plot(summary(qr2), 
+       parm = en_name, 
+       main = lt_name,
+       xlab = "Kvantilis", 
+       ylab = "Koeficientas")
+}
+```
 
 
 ### Kryžminė patikra
