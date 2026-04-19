@@ -564,27 +564,36 @@ sort(abs(coef(final_model_std)), decreasing = TRUE)
 
 ```{r}
 set.seed(123)
-k <- 5
+k <- 10
 data <- data[sample(nrow(data)), ]
 folds <- cut(seq(1, nrow(data)), breaks = k, labels = FALSE)
 
-cv_scores <- numeric(k)
+cv_scores_loss <- numeric(k)
+cv_scores_goodfit <- numeric(k)
 
 for(i in 1:k) {
   test_indices <- which(folds == i, arr.ind = TRUE)
   train_data_cv <- data[-test_indices, ]
   test_data_cv <- data[test_indices, ]
   
-  fit <- rq(SALE_PRC ~ log(LND_SQFOOT)+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
-                            log(HWY_DIST) + structure_quality + TOT_LVG_AREA * log(SUBCNTR_DI), 
+  fit <- rq(SALE_PRC ~ 
+                   log(LND_SQFOOT) + TOT_LVG_AREA + 
+                   log(SPEC_FEAT_VAL+1) + log(OCEAN_DIST) + log(SUBCNTR_DI)+ 
+                   log(CNTR_DIST) + log(HWY_DIST) + structure_quality + log(CNTR_DIST):TOT_LVG_AREA, 
             tau = 0.9, data = train_data_cv)
   
   preds <- predict(fit, newdata = test_data_cv)
   
-  cv_scores[i] <- pinball_loss(test_data_cv$SALE_PRC, preds, 0.9)
+  res <- resid(fit)
+  mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
+  rsd_nl <- resid(mod_nl)
+  
+  cv_scores_loss[i] <- pinball_loss(test_data_cv$SALE_PRC, preds, 0.9)
+  cv_scores_goodfit[i] <- goodfit(res, rsd_nl, 0.90)
 }
 
-mean(cv_scores)
+mean(cv_scores_loss)
+mean(cv_scores_goodfit)
 ```
 
 
