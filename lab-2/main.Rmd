@@ -337,13 +337,7 @@ ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
   theme_minimal()
 ```
 
-```{r}
-qs <- 1:9/10
-qr2 <- rq(SALE_PRC ~ LND_SQFOOT+TOT_LVG_AREA+SPEC_FEAT_VAL+RAIL_DIST+OCEAN_DIST+WATER_DIST+CNTR_DIST+SUBCNTR_DI+HWY_DIST+age+structure_quality, data=train_data, tau = qs)
 
-plot(summary(qr2))
-summary(qr2)
-```
 
 ## Rajono centro modelis
 
@@ -438,21 +432,17 @@ final_model <- rq(SALE_PRC ~
 summary(final_model)
 
 ```
+
 ```{r}
-# Ištraukia koeficientus ir jų intervalus
 rezultatai <- summary(final_model, se = "boot")$coefficients
 
-# Sukuria apatines ir viršutines ribas
 lower <- rezultatai[,1] - 1.96 * rezultatai[,2]
 upper <- rezultatai[,1] + 1.96 * rezultatai[,2]
 
-# Sujungia į vieną objektą
 tavo_lentele <- cbind(rezultatai[,1], lower, upper)
 colnames(tavo_lentele) <- c("Beta", "Lower_95", "Upper_95")
 print(tavo_lentele)
 ```
-
-
 
 
 ```{r}
@@ -481,13 +471,22 @@ cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pa
 
 ```{r}
 ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
-  geom_point(alpha = 0.3, color = "darkblue") +
+  geom_point(alpha = 0.45, color = "darkblue") +
   geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  labs(title = "Tikros ir prognozuotos kainos",
-       x = "Tikra kaina",
-       y = "Prognozuota kaina (0,9 kvantilis)") +
-  theme_minimal()
+  scale_x_continuous(
+    labels = label_number(scale = 1e-6, decimal.mark = ",")) +
+  scale_y_continuous(
+    labels = label_number(scale = 1e-6, decimal.mark = ",")) +
+  coord_cartesian(xlim = c(0, 4000000), ylim = c(0, 4000000)) +
+  labs(title = "Tikros ir prognozuotos kainos (0,9 kvantilis)",
+       x = "Tikra kaina (mln., USD)",
+       y = "Prognozuota kaina (mln., USD)") +
+  theme_bw()
+
+ggsave(filename = "real_vs_fitted.png", width = 5, height = 3, units = "in", dpi = 300)
 ```
+
+
 
 ```{r}
 train_res <- residuals(final_model)
@@ -506,6 +505,20 @@ ggplot(plot_train, aes(x = index, y = residuals)) +
   theme_bw()
 ```
 
+```{r}
+qs <- 1:9/10
+qr2 <- rq(SALE_PRC ~ log(LND_SQFOOT) + TOT_LVG_AREA + log(SPEC_FEAT_VAL+1) + log(OCEAN_DIST) + log(SUBCNTR_DI) + 
+                     log(CNTR_DIST) + log(HWY_DIST) + structure_quality + log(CNTR_DIST):TOT_LVG_AREA,
+          data=train_data, tau = qs)
+
+plot(summary(qr2))
+summary(qr2)
+```
+
+```{r}
+par(mfrow = c(1, 1))
+plot(summary(qr2), parm = "log(LND_SQFOOT)")
+```
 
 
 
