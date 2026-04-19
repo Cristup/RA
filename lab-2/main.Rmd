@@ -337,13 +337,7 @@ ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
   theme_minimal()
 ```
 
-```{r}
-qs <- 1:9/10
-qr2 <- rq(SALE_PRC ~ LND_SQFOOT+TOT_LVG_AREA+SPEC_FEAT_VAL+RAIL_DIST+OCEAN_DIST+WATER_DIST+CNTR_DIST+SUBCNTR_DI+HWY_DIST+age+structure_quality, data=train_data, tau = qs)
 
-plot(summary(qr2))
-summary(qr2)
-```
 
 ## Rajono centro modelis
 
@@ -422,21 +416,37 @@ pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
 loss_value <- pinball_loss(actual, pred, 0.9)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\nVidutinė kvantilių paklaida: ", loss_value)
 ```
 
 # Sąveikos
 
+
 ```{r}
-model1 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
-                            log(SUBCNTR_DI)+log(HWY_DIST) + structure_quality + TOT_LVG_AREA : log(LND_SQFOOT), 
+final_model <- rq(SALE_PRC ~ 
+                   log(LND_SQFOOT) + TOT_LVG_AREA + 
+                   log(SPEC_FEAT_VAL+1) + log(OCEAN_DIST) + log(SUBCNTR_DI)+ 
+                   log(CNTR_DIST) + log(HWY_DIST) + structure_quality + log(CNTR_DIST):TOT_LVG_AREA, 
                  data=train_data, tau = 0.9)
 
-summary(model1)
+summary(final_model)
+
 ```
 
 ```{r}
-pred <- predict(model1, newdata = test_data)
+rezultatai <- summary(final_model, se = "boot")$coefficients
+
+lower <- rezultatai[,1] - 1.96 * rezultatai[,2]
+upper <- rezultatai[,1] + 1.96 * rezultatai[,2]
+
+tavo_lentele <- cbind(rezultatai[,1], lower, upper)
+colnames(tavo_lentele) <- c("Beta", "Lower_95", "Upper_95")
+print(tavo_lentele)
+```
+
+
+```{r}
+pred <- predict(final_model, newdata = test_data)
 actual <- test_data$SALE_PRC
 
 mae <- mean(abs(actual - pred))
@@ -445,121 +455,97 @@ rho <- cor(pred, actual, method='spearman')
 
 pataikyta <- mean(actual <= pred)
 
-res <- resid(model1)
+res <- resid(final_model)
 mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
 rsd_nl <- resid(mod_nl)
 
-aic <- AIC(model1)
+aic <- AIC(final_model)
 
 pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
 
 loss_value <- pinball_loss(actual, pred, 0.9)
 
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
+cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\nVidutinė kvantilių paklaida: ", loss_value)
 ```
 
-```{r}
-model2 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
-                            log(SUBCNTR_DI)+log(HWY_DIST) + structure_quality + TOT_LVG_AREA : log(SPEC_FEAT_VAL+1), 
-                 data=train_data, tau = 0.9)
-
-summary(model2)
-```
-
-```{r}
-pred <- predict(model2, newdata = test_data)
-actual <- test_data$SALE_PRC
-
-mae <- mean(abs(actual - pred))
-rmse <- sqrt(mean((actual - pred)^2))
-rho <- cor(pred, actual, method='spearman')
-
-pataikyta <- mean(actual <= pred)
-
-res <- resid(model2)
-mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
-rsd_nl <- resid(mod_nl)
-
-aic <- AIC(model2)
-
-pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
-
-loss_value <- pinball_loss(actual, pred, 0.9)
-
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
-```
-
-```{r}
-model3 <- rq(SALE_PRC ~ log(LND_SQFOOT)+TOT_LVG_AREA+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
-                            log(SUBCNTR_DI)+log(HWY_DIST) + structure_quality + TOT_LVG_AREA : log(OCEAN_DIST), 
-                 data=train_data, tau = 0.9)
-
-summary(model3)
-```
-
-```{r}
-pred <- predict(model3, newdata = test_data)
-actual <- test_data$SALE_PRC
-
-mae <- mean(abs(actual - pred))
-rmse <- sqrt(mean((actual - pred)^2))
-rho <- cor(pred, actual, method='spearman')
-
-pataikyta <- mean(actual <= pred)
-
-res <- resid(model3)
-mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
-rsd_nl <- resid(mod_nl)
-
-aic <- AIC(model3)
-
-pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
-
-loss_value <- pinball_loss(actual, pred, 0.9)
-
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
-```
-
-```{r}
-model4 <- rq(SALE_PRC ~ log(LND_SQFOOT)+log(SPEC_FEAT_VAL+1)+log(OCEAN_DIST)+
-                            log(HWY_DIST) + structure_quality + TOT_LVG_AREA * log(SUBCNTR_DI), 
-                 data=train_data, tau = 0.9)
-
-summary(model4)
-```
-
-```{r}
-pred <- predict(model4, newdata = test_data)
-actual <- test_data$SALE_PRC
-
-mae <- mean(abs(actual - pred))
-rmse <- sqrt(mean((actual - pred)^2))
-rho <- cor(pred, actual, method='spearman')
-
-pataikyta <- mean(actual <= pred)
-
-res <- resid(model4)
-mod_nl <- rq((SALE_PRC) ~ 1, tau = 0.90, data = train_data)
-rsd_nl <- resid(mod_nl)
-
-aic <- AIC(model4)
-
-pseudo_r2 <- goodfit(res, rsd_nl, 0.90)
-
-loss_value <- pinball_loss(actual, pred, 0.9)
-
-cat("MAE:", mae, "\nRMSE:", rmse, "\nSpearman:", rho, "\nPataikymo dažnis:", pataikyta, "\nPseudo R2 (tau = 0.9):", pseudo_r2, "\nAIC:", aic, "\n Vidutinė kvantilių paklaida: ", loss_value)
-```
 
 ```{r}
 ggplot(test_data, aes(x = SALE_PRC, y = pred)) +
-  geom_point(alpha = 0.3, color = "darkblue") +
+  geom_point(alpha = 0.45, color = "darkblue") +
   geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
-  labs(title = "Tikros ir prognozuotos kainos",
-       x = "Tikra kaina",
-       y = "Prognozuota kaina (0,9 kvantilis)") +
-  theme_minimal()
+  scale_x_continuous(
+    labels = label_number(scale = 1e-6, decimal.mark = ",")) +
+  scale_y_continuous(
+    labels = label_number(scale = 1e-6, decimal.mark = ",")) +
+  coord_cartesian(xlim = c(0, 4000000), ylim = c(0, 4000000)) +
+  labs(title = "Tikros ir prognozuotos kainos (0,9 kvantilis)",
+       x = "Tikra kaina (mln., USD)",
+       y = "Prognozuota kaina (mln., USD)") +
+  theme_bw()
+
+ggsave(filename = "real_vs_fitted.png", width = 5, height = 3, units = "in", dpi = 300)
 ```
+
+
+
+```{r}
+train_res <- residuals(final_model)
+train_fit <- predict(final_model)
+
+plot_train <- data.frame(
+  index = 1:length(train_res),
+  fitted = train_fit,
+  residuals = train_res)
+
+ggplot(plot_train, aes(x = index, y = residuals)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Mokymo duomenų liekanos pagal indeksą",
+       x = "Indeksas", y = "Liekana") +
+  theme_bw()
+```
+
+```{r fig.width=10}
+qs <- 1:9/10
+qr2 <- rq(SALE_PRC ~ log(LND_SQFOOT) + TOT_LVG_AREA + log(SPEC_FEAT_VAL+1) + log(OCEAN_DIST) + log(SUBCNTR_DI) + 
+                     log(CNTR_DIST) + log(HWY_DIST) + structure_quality + log(CNTR_DIST):TOT_LVG_AREA,
+          data=train_data, tau = qs)
+
+plot(summary(qr2))
+summary(qr2)
+```
+
+```{r}
+lt_titles <- c(
+  "(Intercept)" = "Intercept",
+  "log(LND_SQFOOT)" = "log(Žemės plotas)",
+  "TOT_LVG_AREA" = "Bendras plotas",
+  "log(SPEC_FEAT_VAL + 1)" = "log(Papildomų objektų vertė)",
+  "log(OCEAN_DIST)" = "log(Atstumas iki jūros)",
+  "log(SUBCNTR_DI)" = "log(Atstumas iki rajono centro)",
+  "log(CNTR_DIST)" = "log(Atstumas iki verslo rajono)",
+  "log(HWY_DIST)" = "log(Atstumas iki greitkelio)",
+  "structure_quality2" = "Statinio kokybė: 2",
+  "structure_quality3" = "Statinio kokybė: 3",
+  "structure_quality4" = "Statinio kokybė: 4",
+  "structure_quality5" = "Statinio kokybė: 5",
+  "TOT_LVG_AREA:log(CNTR_DIST)" = "Bendras plotas : Atstumas iki centro (sąveika)"
+)
+
+par(mfrow = c(1, 1))
+
+for (i in 1:length(lt_titles)) {
+  en_name <- names(lt_titles)[i]
+  lt_name <- lt_titles[i]
+  
+  plot(summary(qr2), 
+       parm = en_name, 
+       main = lt_name,
+       xlab = "Kvantilis", 
+       ylab = "Koeficientas")
+}
+```
+
 
 ### Kryžminė patikra
 
@@ -587,6 +573,24 @@ for(i in 1:k) {
 
 mean(cv_scores)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ------------------------------------------------------------------------
 
