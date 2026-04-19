@@ -487,24 +487,6 @@ ggsave(filename = "real_vs_fitted.png", width = 5, height = 3, units = "in", dpi
 ```
 
 
-
-```{r}
-train_res <- residuals(final_model)
-train_fit <- predict(final_model)
-
-plot_train <- data.frame(
-  index = 1:length(train_res),
-  fitted = train_fit,
-  residuals = train_res)
-
-ggplot(plot_train, aes(x = index, y = residuals)) +
-  geom_point(alpha = 0.3, color = "steelblue") +
-  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
-  labs(title = "Mokymo duomenų liekanos pagal indeksą",
-       x = "Indeksas", y = "Liekana") +
-  theme_bw()
-```
-
 ```{r fig.width=10}
 qs <- 1:9/10
 qr2 <- rq(SALE_PRC ~ log(LND_SQFOOT) + TOT_LVG_AREA + log(SPEC_FEAT_VAL+1) + log(OCEAN_DIST) + log(SUBCNTR_DI) + 
