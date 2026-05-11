@@ -1,0 +1,18 @@
+```{r Bibliotekos, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+```{r}
+data <- read.csv("../datasets/gbsg.csv")
+data <- data %>% select(-X)
+
+data$meno <- as.factor(data$meno)
+data$hormon <- as.factor(data$hormon)
+data$status <- as.factor(data$status)
+
+str(data)
+```
+
+```{r}
+summary(data)
+```
