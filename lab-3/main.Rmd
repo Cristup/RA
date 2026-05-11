@@ -17,6 +17,8 @@ str(data)
 summary(data)
 ```
 
+Cenzuravimas is desines, atstitiktinis, nes i tyrima paceintai itraukti skirtingais laikais, kiekvienas stebetas skirtinga trukme
+
 Cenzūruotų stebėjimų dalis
 
 ```{r}
@@ -72,9 +74,79 @@ data_long %>%
 
 
 
+```{r}
+status_num <- as.numeric(as.character(data$status))
 
+km_overall <- survfit(Surv(rfstime, status_num) ~ 1, data = data)
+ggsurvplot(km_overall,
+           data       = data,
+           conf.int   = TRUE,
+           xlab       = "Laikas (dienos)",
+           ylab       = "Išgyvenamumo tikimybė",
+           title      = "Kaplan-Meier kreivė (visi pacientai)",
+           ggtheme    = theme_minimal())
+```
 
+```{r}
+# KM pagal menopauzę
+km_meno <- survfit(Surv(rfstime, status_num) ~ meno, data = data)
+ggsurvplot(km_meno,
+           data       = data,
+           conf.int   = TRUE,
+           pval       = TRUE,   # log-rank testas
+           legend.labs = c("Prieš menopauzę", "Po menopauzės"),
+           xlab       = "Laikas (dienos)",
+           title      = "KM kreivė pagal menopauzę",
+           ggtheme    = theme_minimal())
+```
 
+```{r}
+# KM pagal hormoninę terapiją
+km_hormon <- survfit(Surv(rfstime, status_num) ~ hormon, data = data)
+ggsurvplot(km_hormon,
+           data        = data,
+           conf.int    = TRUE,
+           pval        = TRUE,
+           legend.labs = c("Be terapijos", "Su terapija"),
+           xlab        = "Laikas (dienos)",
+           title       = "KM kreivė pagal hormoninę terapiją",
+           ggtheme     = theme_minimal())
+```
+
+```{r}
+# KM pagal naviko laipsnį
+km_grade <- survfit(Surv(rfstime, status_num) ~ grade, data = data)
+ggsurvplot(km_grade,
+           data        = data,
+           conf.int    = TRUE,
+           pval        = TRUE,
+           xlab        = "Laikas (dienos)",
+           title       = "KM kreivė pagal naviko laipsnį",
+           ggtheme     = theme_minimal())
+```
+
+```{r}
+data$status_num <- status_num
+data$statusLabel <- ifelse(status_num == 1, "Įvykis", "Cenzūruota")
+
+kiekybiniai_vars <- c("age", "size", "nodes", "pgr", "er")
+
+plots <- lapply(kiekybiniai_vars, function(var) {
+  ggplot(data, aes_string(x = var, y = "rfstime",
+                          color = "statusLabel",
+                          shape = "statusLabel")) +
+    geom_point(alpha = 0.5, size = 1.5) +
+    scale_color_manual(values = c("Įvykis" = "firebrick",
+                                  "Cenzūruota" = "steelblue")) +
+    labs(title = paste("rfstime ~", var),
+         x = var, y = "Laikas (dienos)",
+         color = "Statusas", shape = "Statusas") +
+    theme_minimal()
+})
+
+library(gridExtra)
+grid.arrange(grobs = plots, ncol = 2)
+```
 
 
 
