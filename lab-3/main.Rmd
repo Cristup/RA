@@ -200,5 +200,50 @@ print(ph_test)
 plot(ph_test)
 ```
 
+```{r}
+par(mfrow=c(2, 2))
+res <- residuals(cox_full, type="martingale")
+X <- as.matrix(data[, c("age", "size")]) # matrix of covariates
+for (j in 1:2) { # residual plots
+plot(X[, j], res, xlab=c("age", "size")[j], ylab="residuals")
+abline(h=0, lty=2)
+lines(lowess(X[, j], res, iter=0))
+}
+b <- coef(cox_full)[c(2,3)] # regression coefficients
+for (j in 1:2) { # component-plus-residual plots
+plot(X[, j], b[j]*X[, j] + res, xlab=c("age", "size")[j],
+ylab="component+residual")
+abline(lm(b[j]*X[, j] + res ~ X[, j]), lty=2)
+lines(lowess(X[, j], b[j]*X[, j] + res, iter=0))
+}
+par(mfrow=c(1, 1))
+```
+
+```{r}
+par(mfrow=c(2, 2))
+res <- residuals(cox_full, type="martingale")
+X <- as.matrix(data[, c("nodes", "pgr")]) # matrix of covariates
+for (j in 1:2) { # residual plots
+plot(X[, j], res, xlab=c("nodes", "pgr")[j], ylab="residuals")
+abline(h=0, lty=2)
+lines(lowess(X[, j], res, iter=0))
+}
+b <- coef(cox_full)[c(2,3)] # regression coefficients
+for (j in 1:2) { # component-plus-residual plots
+plot(X[, j], b[j]*X[, j] + res, xlab=c("nodes", "pgr")[j],
+ylab="component+residual")
+abline(lm(b[j]*X[, j] + res ~ X[, j]), lty=2)
+lines(lowess(X[, j], b[j]*X[, j] + res, iter=0))
+}
+par(mfrow=c(1, 1))
+```
+
+
+
+
+
+
+
+
 
 
