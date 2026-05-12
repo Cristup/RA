@@ -1,5 +1,7 @@
 ```{r Bibliotekos, message=FALSE, warning=FALSE}
 library(tidyverse)
+library(survival)
+library(survminer)
 library(car)
 ```
 
