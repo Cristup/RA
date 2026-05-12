@@ -247,3 +247,66 @@ par(mfrow=c(1, 1))
 
 
 
+
+
+
+
+```{r}
+library(survival)
+library(dplyr)
+
+df_gbsg <- read.csv("../datasets/gbsg.csv") %>%
+  select(-X)
+
+df_gbsg <- df_gbsg %>%
+  mutate(
+    status_num = as.numeric(as.character(status)),
+    meno   = as.factor(meno),
+    hormon = as.factor(hormon),
+    grade  = as.factor(grade),
+    status = as.factor(status)) %>%
+  select(-status, -pid)
+
+data_split <- survSplit(formula = Surv(rfstime, status_num) ~ ., data = df_gbsg, 
+  cut = unique(df_gbsg$rfstime[df_gbsg$status_num == 1]), start = "start", end = "stop")
+
+print(head(data_split, 5))
+
+model_interaction <- coxph(
+  Surv(start, stop, status_num) ~ age + meno + size + grade + nodes + pgr + er + hormon +
+                                  age:stop + meno:stop + grade:stop + pgr:stop + er:stop, data = data_split)
+
+summary(model_interaction)
+```
+
+
+
+
+```{r}
+library(survival)
+library(dplyr)
+library(RcmdrPlugin.survival)
+
+df_gbsg <- read.csv("../datasets/gbsg.csv") %>%
+  select(-X) %>%
+  mutate(
+    status_num = as.numeric(as.character(status)),
+    meno   = as.factor(meno),
+    hormon = as.factor(hormon),
+    grade  = as.factor(grade)
+  )
+
+
+data_long <- RcmdrPlugin.survival::unfold(df_gbsg, time = "rfstime", event = "status_num", id = "pid")
+
+print(head(data_long[data_long$pid == 1, c("pid", "start", "stop", "status_num", "age")], 10))
+
+model_interaction <- coxph(
+  Surv(start, stop, status_num) ~ 
+    age + meno + size + grade + nodes + pgr + er + hormon +
+    age:stop + meno:stop + grade:stop + pgr:stop + er:stop, data = data_long)
+
+summary(model_interaction)
+```
+
+
