@@ -58,7 +58,7 @@ char
 
 ```{r}
 data_long <- data %>%
-  dplyr::select(-status, -hormon, -meno) %>%
+  dplyr::select(-status, -hormon, -meno, -pid, -grade) %>%
   pivot_longer(
     cols = everything(), 
     names_to = "variable", 
@@ -70,7 +70,7 @@ data_long$variable <- as.factor(data_long$variable)
 data_long %>% 
   ggplot(aes(x = variable, y = value, fill = variable)) +
   geom_boxplot(outlier.alpha = 0.2) +
-  facet_wrap(~variable, scales = "free", ncol = 4) + 
+  facet_wrap(~variable, scales = "free", ncol = 3) + 
   theme_bw() +
   theme(legend.position = 'none')
 ```
@@ -279,9 +279,6 @@ model_interaction <- coxph(
 summary(model_interaction)
 ```
 
-
-
-
 ```{r}
 library(survival)
 library(dplyr)
@@ -308,5 +305,15 @@ model_interaction <- coxph(
 
 summary(model_interaction)
 ```
+
+
+
+
+
+
+
+
+
+
 
 
