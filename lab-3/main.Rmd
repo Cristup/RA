@@ -1,5 +1,6 @@
 ```{r Bibliotekos, message=FALSE, warning=FALSE}
 library(tidyverse)
+library(car)
 ```
 
 ```{r}
@@ -149,9 +150,53 @@ grid.arrange(grobs = plots, ncol = 2)
 ```
 
 
+```{r}
+data$meno   <- as.factor(data$meno)
+data$grade  <- as.factor(data$grade)
+data$hormon <- as.factor(data$hormon)
+```
 
 
 
+```{r}
+status_num <- as.numeric(as.character(data$status))
+
+cox_full <- coxph(Surv(rfstime, status_num) ~ 
+                    age + meno + size + grade + 
+                    nodes + pgr + er + hormon, 
+                  data = data)
+summary(cox_full)
+```
+
+```{r}
+vif(cox_full)
+```
+
+```{r}
+2 / sqrt(686)
+```
+
+
+
+```{r}
+dfbeta <- residuals(cox_full, type="dfbeta")
+par(mfrow=c(2, 2))
+for (j in 1:9) {
+  plot(dfbeta[, j],
+  ylab=names(coef(cox_full))[j])
+  abline(h=0, lty=2)
+}
+```
+
+
+
+
+
+```{r}
+ph_test <- cox.zph(cox_full)
+print(ph_test)
+plot(ph_test)
+```
 
 
 
