@@ -109,7 +109,7 @@ ggsurvplot(km_meno,
 
 ```{r}
 time_vec   <- data$rfstime
-status_vec <- data$status_num
+status_vec <- as.numeric(as.character(data$status))
 group_vec  <- as.numeric(as.factor(data$meno)) - 1
 
 res <- twostage(time_vec, status_vec, group_vec, nboot = 100)
