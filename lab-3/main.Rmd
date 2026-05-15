@@ -14,27 +14,13 @@ library(scales)
 data <- read.csv("../datasets/gbsg.csv")
 data <- data %>% select(-X)
 
-data <- data %>%filter(age > 30)
+data <- data %>%filter(age >= 30)
 
 data$meno <- as.factor(data$meno)
 data$hormon <- as.factor(data$hormon)
 data$status <- as.factor(data$status)
 
 str(data)
-```
-
-```{r}
-data <- data %>% 
-  mutate(age_group = case_when(
-    age <= 35 ~ "20-35",
-    age <= 55 ~ "35-55",
-    age <= 70 ~ "55-70",
-    TRUE      ~ "70+"
-  ))
-
-table(data$age_group)
-
-table(data$age_group, data$status)
 ```
 
 
@@ -58,9 +44,11 @@ table(meno)
 
 table(hormon)
 
-table(meno, status)
+table(data$meno, data$status)
 
-table(hormon, status)
+table(data$hormon, data$status)
+
+table(data$meno, data$hormon)
 ```
 
 ```{r}
@@ -82,7 +70,7 @@ char
 
 ```{r fig.height=3, fig.width=6.7, message=FALSE, warning=FALSE}
 data_long <- data %>%
-  dplyr::select(-status, -hormon, -meno, -pid, -grade, -age_group) %>%
+  dplyr::select(-status, -hormon, -meno, -pid, -grade) %>%
   pivot_longer(
     cols = everything(), 
     names_to = "variable", 
@@ -99,7 +87,7 @@ data_long %>%
   theme(legend.position = 'none') +
   labs(x = 'Kintamaasis', y = 'Reikšmė')
 
-#ggsave(filename = "boxplot.png", width = 6.7, height = 3, units = "in", dpi = 300)
+ggsave(filename = "boxplot.png", width = 6.7, height = 3, units = "in", dpi = 300)
 ```
 
 ```{r fig.height=4, fig.width=6.7, message=FALSE, warning=FALSE}
@@ -126,7 +114,7 @@ data_long %>%
   theme_bw() +
   theme(legend.position = 'bottom')
 
-#ggsave(filename = "boxplot_by_status.png", width = 6.7, height = 4, units = "in", dpi = 300)
+ggsave(filename = "boxplot_by_status.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
 
 ```{r fig.height=3, fig.width=6.7, warning=FALSE}
@@ -178,7 +166,7 @@ mp$plot <- mp$plot + theme(legend.key.size = unit(0.4, "cm"),
     ) +
   scale_y_continuous(labels = label_number(decimal.mark = ","))
 mp
-#ggsave(plot = mp$plot, filename = "KM_meno.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
+ggsave(plot = mp$plot, filename = "KM_meno.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
 ```
 
 ```{r}
@@ -230,7 +218,7 @@ horm$plot <- horm$plot + theme(legend.key.size = unit(0.4, "cm"),
     ) +
   scale_y_continuous(labels = label_number(decimal.mark = ","))
 horm
-#ggsave(plot = horm$plot, filename = "KM_horm.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
+ggsave(plot = horm$plot, filename = "KM_horm.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
 ```
 
 ```{r}
