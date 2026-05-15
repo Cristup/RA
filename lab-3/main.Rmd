@@ -6,6 +6,9 @@ library(car)
 library(TSHRC)
 library(patchwork)
 library(scales)
+library(ggplot2)
+library(grid)
+library(gridExtra)
 ```
 
 # Duomenys
@@ -68,54 +71,6 @@ char <- data %>%
 char
 ```
 
-```{r fig.height=3, fig.width=6.7, message=FALSE, warning=FALSE}
-data_long <- data %>%
-  dplyr::select(-status, -hormon, -meno, -pid, -grade) %>%
-  pivot_longer(
-    cols = everything(), 
-    names_to = "variable", 
-    values_to = "value"
-  )
-
-data_long$variable <- as.factor(data_long$variable)
-
-data_long %>% 
-  ggplot(aes(x = variable, y = value, fill = variable)) +
-  geom_boxplot(outlier.alpha = 0.2) +
-  facet_wrap(~variable, scales = "free", ncol = 3) + 
-  theme_bw() +
-  theme(legend.position = 'none') +
-  labs(x = 'Kintamaasis', y = 'Reikšmė')
-
-ggsave(filename = "boxplot.png", width = 6.7, height = 3, units = "in", dpi = 300)
-```
-
-```{r fig.height=4, fig.width=6.7, message=FALSE, warning=FALSE}
-data_long <- data %>%
-  dplyr::select(status, age, size, nodes, pgr, er, rfstime) %>%
-  pivot_longer(
-    cols = -status,
-    names_to = "variable", 
-    values_to = "value"
-  )
-
-data_long$variable <- as.factor(data_long$variable)
-data_long$status <- as.factor(data_long$status)
-
-data_long %>% 
-  ggplot(aes(x = status, y = value, fill = status)) +
-  geom_boxplot(outlier.alpha = 0.2) +
-  facet_wrap(~variable, scales = "free", ncol = 3) + 
-  scale_fill_manual(values = c("0" = "#66c2a5", "1" = "#fc8d62"), 
-                    labels = c("Cenzūruota", "Įvykis")) +
-  labs(title = "Kintamųjų pasiskirstymas pagal statusą",
-       x = "Statusas",
-       y = "Reikšmė") +
-  theme_bw() +
-  theme(legend.position = 'bottom')
-
-ggsave(filename = "boxplot_by_status.png", width = 6.7, height = 4, units = "in", dpi = 300)
-```
 
 ```{r fig.height=4, fig.width=6.7, message=FALSE, warning=FALSE}
 data_long <- data %>%
@@ -312,33 +267,62 @@ grade
 ggsave(plot = grade$plot, filename = "KM_grade.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
 ```
 
-```{r fig.height=4.5, fig.width=6.7, warning=FALSE}
-data$status_num <- status_num
-data$statusLabel <- ifelse(status_num == 1, "Įvykis", "Cenzūruota")
+
+```{r}
+data$statusLabel <- ifelse(status == 1, "Įvykis", "Cenzūruota")
 
 kiekybiniai_vars <- c("age", "size", "nodes", "pgr", "er")
+vardai_lt <- c(
+  "age" = "Amžius",
+  "size" = "Naviko dydis",
+  "nodes" = "Teigiamų limfmazgių skaičius",
+  "pgr" = "Progesterono receptoriai",
+  "er" = "Estrogenų receptoriai"
+)
 
 plots <- lapply(kiekybiniai_vars, function(var) {
-  ggplot(data, aes_string(x = var, y = "rfstime", 
-                          color = "statusLabel", 
-                          shape = "statusLabel")) +
+  ggplot(data, aes_string(x = "rfstime", y = var, color = "statusLabel", shape = "statusLabel")) +
     geom_point(alpha = 0.5, size = 1) +
     scale_color_manual(values = c("Įvykis" = "firebrick", 
                                   "Cenzūruota" = "steelblue")) +
-    labs(title = paste("RFS laikas ~", var),
-         x = NULL, y = "Dienos",
-         color = "Statusas", shape = "Statusas") +
-    theme_bw()
+    labs(title = vardai_lt[var], x = NULL, y = NULL, color = "Statusas", shape = "Statusas") + 
+    theme_bw() +
+    theme(plot.title = element_text(size = 10, hjust = 0.5)) + 
+    guides(color = guide_legend(override.aes = list(size = 2)),
+           shape = guide_legend(override.aes = list(size = 2)))
 })
 
-combined_plot <- wrap_plots(plots, ncol = 2) + 
+combined <- wrap_plots(plots[[1]], plots[[2]], 
+                       plots[[3]], plots[[4]], 
+                       plots[[5]], guide_area(),
+                       ncol = 2) + 
   plot_layout(guides = "collect") & 
-  theme(legend.position = 'bottom')
+  theme(legend.position = "inside",
+        legend.justification = "center",
+        legend.title = element_text(size = 9.5),
+        legend.text = element_text(size = 9))
 
-print(combined_plot)
+y_label <- textGrob("Reikšmė", rot = 90, gp = gpar(fontsize = 12))
+x_label <- textGrob("Laikas", gp = gpar(fontsize = 12))
+main_title <- textGrob("Kiekybinių kintamųjų ryšys su išgyvenamumo laiku",
+                       x = unit(0, "npc"), hjust = 0,
+                       gp = gpar(fontsize = 13))
 
-#ggsave(filename = "scater.png", width = 6.7, height = 4.5, units = "in", dpi = 300)
+final_grob <- arrangeGrob(
+  patchworkGrob(combined), 
+  left = y_label, 
+  bottom = x_label,
+  top = main_title,
+  padding = unit(0.5, "line"))
+
+grid.newpage()
+grid.draw(final_grob)
+
+#png(filename = "scater_final.png", width = 5.5, height = 4.5, units = "in", res = 300)
+#grid.draw(final_grob)
+#dev.off()
 ```
+
 
 ```{r}
 data$meno   <- as.factor(data$meno)
