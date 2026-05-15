@@ -211,6 +211,27 @@ for (j in 1:9) {
 }
 ```
 
+```{r}
+threshold <- 2 / sqrt(686)
+dfbeta <- residuals(cox_full, type="dfbeta")
+par(mfrow=c(3, 3))
+
+for (j in 1:9) {
+  y_reikšmės <- dfbeta[, j]
+  y_limitas <- max(c(abs(y_reikšmės), threshold)) * 1.1
+  
+  plot(dfbeta[, j],
+       ylab=names(coef(cox_full))[j],
+       main=paste(names(coef(cox_full))[j]),
+       col="steelblue", 
+       #ylim = c(-y_limitas, y_limitas,
+       pch=20)
+  
+  abline(h=0, lty=1, col="black") 
+  abline(h = threshold, lty = 2, col = "red")
+  abline(h = -threshold, lty = 2, col = "red")
+}
+```
 
 
 ## PH prielaida
