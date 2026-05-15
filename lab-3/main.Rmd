@@ -4,6 +4,7 @@ library(survival)
 library(survminer)
 library(car)
 library(TSHRC)
+library(patchwork)
 ```
 
 # Duomenys
@@ -278,51 +279,53 @@ coef(cox_full)
 ```
 
 ```{r}
-par(mfrow=c(2, 2))
-res <- residuals(cox_full, type="martingale")
-X <- as.matrix(data[, c("age", "size")]) # matrix of covariates
+data <- data %>% 
+  mutate(log_nodes = log(nodes + 1))
 
-# residual plots
-for (j in 1:2) { 
-  plot(X[, j], res, xlab=c("age", "size")[j], ylab="residuals")
-  abline(h=0, lty=2)
-  lines(lowess(X[, j], res, iter=0))
-}
+cox_full2 <- coxph(Surv(rfstime, status_num) ~ 
+                    age + meno + size + grade + 
+                    log_nodes + pgr + er + hormon, data = data)
 
-# regression coefficients
-b <- coef(cox_full)[c("age", "size")]
+res <- residuals(cox_full2, type = "martingale")
+target_vars <- c("age", "size", "log_nodes", "pgr", "er")
+b <- coef(cox_full2)[target_vars]
 
-# component-plus-residual plots
-for (j in 1:2) { 
-  plot(X[, j], b[j]*X[, j] + res, xlab=c("age", "size")[j], ylab="component+residual")
-  abline(lm(b[j]*X[, j] + res ~ X[, j]), lty=2)
-  lines(lowess(X[, j], b[j]*X[, j] + res, iter=0))
-}
-par(mfrow=c(1, 1))
+plot_data <- data %>%
+  select(all_of(target_vars)) %>%
+  mutate(residuals = res) %>%
+  pivot_longer(cols = all_of(target_vars), names_to = "variable", values_to = "x_value") %>%
+  mutate(
+    beta = b[variable],
+    comp_residual = beta * x_value + residuals,
+    variable = factor(variable, levels = target_vars)
+  )
+
+p1 <- ggplot(plot_data, aes(x = x_value, y = residuals)) +
+  geom_point(alpha = 0.5, color = "black") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "blue", span = 0.75) +
+  facet_wrap(~variable, scales = "free_x", nrow = 1) +
+  labs(x = NULL, y = "Martingale Residuals") +
+  theme_minimal() +
+  theme(strip.text = element_text(face = "bold", size = 11))
+
+p2 <- ggplot(plot_data, aes(x = x_value, y = comp_residual)) +
+  geom_point(alpha = 0.5, color = "black") +
+  geom_smooth(method = "lm", linetype = "dashed", se = FALSE, color = "darkgray") +
+  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "blue", span = 0.75) +
+  facet_wrap(~variable, scales = "free_x", nrow = 1) +
+  labs(x = "Covariate Value", y = "Component + Residual") +
+  theme_minimal() +
+  theme(strip.text = element_blank())
+
+final_plot <- p1 / p2
+
+print(final_plot)
 ```
 
-```{r}
-par(mfrow=c(2, 2))
-res <- residuals(cox_full, type="martingale")
-X <- as.matrix(data[, c("nodes", "pgr")]) # matrix of covariates
 
-# residual plots
-for (j in 1:2) { 
-  plot(X[, j], res, xlab=c("nodes", "pgr")[j], ylab="residuals")
-  abline(h=0, lty=2)
-  lines(lowess(X[, j], res, iter=0))
-}
 
-# regression coefficients
-b <- coef(cox_full)[c("nodes", "pgr")] 
 
-# component-plus-residual plots
-for (j in 1:2) { 
-  plot(X[, j], b[j]*X[, j] + res, xlab=c("nodes", "pgr")[j], ylab="component+residual")
-  abline(lm(b[j]*X[, j] + res ~ X[, j]), lty=2)
-  lines(lowess(X[, j], b[j]*X[, j] + res, iter=0))
-}
 
-par(mfrow=c(1, 1))
-```
+
 
