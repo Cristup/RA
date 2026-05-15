@@ -304,7 +304,8 @@ combined <- wrap_plots(plots[[1]], plots[[2]],
 
 y_label <- textGrob("Reikšmė", rot = 90, gp = gpar(fontsize = 12))
 x_label <- textGrob("Laikas", gp = gpar(fontsize = 12))
-main_title <- textGrob("Kiekybinių kintamųjų ryšys su išgyvenamumo laiku", 
+main_title <- textGrob("Kiekybinių kintamųjų ryšys su išgyvenamumo laiku",
+                       x = unit(0, "npc"), hjust = 0,
                        gp = gpar(fontsize = 13))
 
 final_grob <- arrangeGrob(
