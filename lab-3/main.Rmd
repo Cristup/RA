@@ -184,6 +184,11 @@ ggsurvplot(km_grade,
 ```
 
 ```{r fig.height=4.5, fig.width=6.7, warning=FALSE}
+data$status_num <- status_num
+data$statusLabel <- ifelse(status_num == 1, "Įvykis", "Cenzūruota")
+
+kiekybiniai_vars <- c("age", "size", "nodes", "pgr", "er")
+
 plots <- lapply(kiekybiniai_vars, function(var) {
   ggplot(data, aes_string(x = var, y = "rfstime", 
                           color = "statusLabel", 
