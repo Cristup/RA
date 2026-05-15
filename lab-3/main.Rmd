@@ -80,7 +80,30 @@ data_long %>%
   theme(legend.position = 'none')
 ```
 
+```{r}
+data_long <- data %>%
+  dplyr::select(status, age, size, nodes, pgr, er, rfstime) %>%
+  pivot_longer(
+    cols = -status,
+    names_to = "variable", 
+    values_to = "value"
+  )
 
+data_long$variable <- as.factor(data_long$variable)
+data_long$status <- as.factor(data_long$status)
+
+data_long %>% 
+  ggplot(aes(x = status, y = value, fill = status)) +
+  geom_boxplot(outlier.alpha = 0.2) +
+  facet_wrap(~variable, scales = "free", ncol = 3) + 
+  scale_fill_manual(values = c("0" = "#66c2a5", "1" = "#fc8d62"), 
+                    labels = c("Cenzūruota", "Įvykis")) +
+  labs(title = "Kintamųjų pasiskirstymas pagal statusą",
+       x = "Statusas",
+       y = "Reikšmė") +
+  theme_bw() +
+  theme(legend.position = 'bottom')
+```
 
 ```{r}
 status_num <- as.numeric(as.character(data$status))
@@ -299,8 +322,8 @@ plot(ph_test)
 coef(cox_full)
 ```
 
-```{r}
-data <- data %>% 
+```{r message=FALSE, warning=FALSE}
+data <- data %>%
   mutate(log_nodes = log(nodes + 1))
 
 cox_full2 <- coxph(Surv(rfstime, status_num) ~ 
