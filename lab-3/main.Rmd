@@ -270,6 +270,7 @@ ggsave(plot = grade$plot, filename = "KM_grade.png", width = 2.2, height = 1.5, 
 
 ```{r}
 data$statusLabel <- ifelse(status == 1, "Įvykis", "Cenzūruota")
+data$status_num <- as.numeric(as.character(data$status))
 
 kiekybiniai_vars <- c("age", "size", "nodes", "pgr", "er")
 vardai_lt <- c(
@@ -454,6 +455,48 @@ print(ph_test)
 plot(ph_test)
 ```
 
+```{r}
+ph_test <- cox.zph(cox_full)
+n_vars <- nrow(ph_test$table) - 1 
+pavadinimai_lt <- c(
+  "age" = "Amžius",
+  "meno" = "Menopauzės statusas",
+  "size" = "Naviko dydis",
+  "grade" = "Naviko laipsnis",
+  "nodes" = "Teigiamų limfmazgių skaičius",
+  "pgr" = "Progesterono receptoriai",
+  "er" = "Estrogenų receptoriai",
+  "hormon" = "Hormoninė terapija")
+
+options(OutDec = ",")
+png(filename = "ph_plot.png", width = 6.4, height = 5, units = "in", res = 300)
+par(mfrow = c(3, 3),
+    mar = c(2, 2, 2.5, 1),
+    oma = c(2.7, 2.7, 0.5, 0.5))
+
+for (i in 1:n_vars) {
+  var_name_en <- rownames(ph_test$table)[i]
+  var_name_lt <- pavadinimai_lt[var_name_en]
+  if (is.na(var_name_lt)) var_name_lt <- var_name_en
+
+  plot(ph_test[i],
+       main = var_name_lt,
+       xlab = "",
+       ylab = "",
+       col = "steelblue",
+       cex = 0.6,
+       pch = 16,
+       lwd = 1.7,
+       font.main = 1,
+       cex.main = 1.2,
+       cex.axis = 1)
+}
+
+mtext("Laikas (dienos)", side = 1, outer = TRUE, line = 1.5, cex = 0.9)
+mtext("Schoenfeld liekanos", side = 2, outer = TRUE, line = 1.5, cex = 0.9)
+dev.off()
+options(OutDec = ".")
+```
 
 ```{r}
 unfold_data <- function(data, time = "tenure", event = "Churn") {
@@ -488,8 +531,12 @@ data_long_daily <- unfold_data(
 
 
 ```{r}
-model_daily <- coxph(
-  Surv(start, stop, status_num) ~ 
+head(data_long_daily)
+```
+
+
+```{r}
+model_daily <- coxph(Surv(start, stop, status_num) ~ 
     age + meno + size + grade + nodes + pgr + er + hormon + meno:stop, 
   data = data_long_daily)
 ```
