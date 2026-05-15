@@ -117,6 +117,47 @@ data_long %>%
 ggsave(filename = "boxplot_by_status.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
 
+```{r fig.height=4, fig.width=6.7, message=FALSE, warning=FALSE}
+data_long <- data %>%
+  dplyr::select(status, age, size, nodes, pgr, er, rfstime) %>%
+  pivot_longer(
+    cols = -status,
+    names_to = "variable", 
+    values_to = "value")
+
+variable_labels <- c(
+  age = "Amžius",
+  size = "Naviko dydis",
+  nodes = "Teigiamų limfmazgių skaičius",
+  pgr = "Progesterono receptoriai",
+  er = "Estrogenų receptoriai",
+  rfstime = "Išgyvenamumas")
+
+data_long$variable <- factor(
+  data_long$variable,
+  levels = names(variable_labels),
+  labels = variable_labels)
+
+data_long$status <- factor(
+  data_long$status,
+  levels = c(0, 1),
+  labels = c("Cenzūruota", "Įvykis"))
+
+data_long %>% 
+  ggplot(aes(x = status, y = value, fill = status)) +
+  geom_boxplot(outlier.alpha = 0.2) +
+  facet_wrap(~variable, scales = "free", ncol = 3) + 
+  scale_fill_manual(
+    values = c("Cenzūruota" = "steelblue", "Įvykis" = "firebrick")) +
+  labs(title = "Kintamųjų pasiskirstymas pagal statusą",
+       x = "Statusas", y = "Reikšmė") +
+  theme_bw() +
+  theme(legend.position = "None")
+
+
+ggsave(filename = "boxplot_by_status.png", width = 6.7, height = 4, units = "in", dpi = 300)
+```
+
 ```{r fig.height=3, fig.width=6.7, warning=FALSE}
 status_num <- as.numeric(as.character(data$status))
 
