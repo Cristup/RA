@@ -5,6 +5,7 @@ library(survminer)
 library(car)
 library(TSHRC)
 library(patchwork)
+library(scales)
 ```
 
 # Duomenys
@@ -125,19 +126,41 @@ ggsurvplot(km_overall,
 #ggsave(filename = "KM_all.png", width = 6.7, height = 3, units = "in", dpi = 300)
 ```
 
-```{r fig.height=3, fig.width=6.7, warning=FALSE}
+```{r fig.height=1.5, fig.width=2.2, warning=FALSE}
 # KM pagal menopauzę
 km_meno <- survfit(Surv(rfstime, status_num) ~ meno, data = data)
-ggsurvplot(km_meno,
+mp <- ggsurvplot(km_meno,
            data       = data,
+           size        = 0.3,
            conf.int   = TRUE,
+           censor.size  = 2,
+           censor.shape = "+",
            pval       = FALSE,   # log-rank testas
-           legend.labs = c("Prieš menopauzę", "Po menopauzės"),
-           xlab       = "Laikas (dienos)",
-           title      = "KM kreivė pagal menopauzę",
+           legend       = c(0.15, 0.25),
+           legend.labs = c("Prieš", "Po"),
+           legend.title = "",
+           ylab         = "Išgyvenamumo tikimybė",
+           xlab       = "Dienos",
+           title      = "K-M kreivė pagal menopauzę",
+           font.main     = 9,
+           font.x        = 7,
+           font.y        = 7,
+           font.legend   = 6,
+           font.tickslab = 5,
            ggtheme    = theme_minimal())
 
-#ggsave(filename = "KM_meno.png", width = 6.7, height = 3, units = "in", dpi = 300)
+
+
+mp$plot <- mp$plot + theme(legend.key.size = unit(0.4, "cm"),
+    legend.spacing.x = unit(0.01, "cm"),
+    panel.grid.minor = element_blank(), 
+    panel.grid.major = element_line(size = 0.1, color = "grey90"),
+    axis.ticks = element_line(linewidth = 0.1, color = "grey"),
+    axis.ticks.length = unit(0.05, "cm")
+    ) +
+  scale_y_continuous(labels = label_number(decimal.mark = ","))
+mp
+#ggsave(plot = mp$plot, filename = "KM_meno.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
 ```
 
 ```{r}
@@ -157,31 +180,91 @@ res
 ```{r fig.height=3, fig.width=6.7, warning=FALSE}
 # KM pagal hormoninę terapiją
 km_hormon <- survfit(Surv(rfstime, status_num) ~ hormon, data = data)
-ggsurvplot(km_hormon,
-           data        = data,
-           conf.int    = TRUE,
-           pval        = TRUE,
-           legend.labs = c("Be terapijos", "Su terapija"),
-           xlab        = "Laikas (dienos)",
-           title       = "KM kreivė pagal hormoninę terapiją",
-           ggtheme     = theme_minimal())
 
-#ggsave(filename = "KM_hormon.png", width = 6.7, height = 3, units = "in", dpi = 300)
+horm <- ggsurvplot(km_hormon,
+           data       = data,
+           size        = 0.3,
+           conf.int   = TRUE,
+           censor.size  = 2,
+           censor.shape = "+",
+           pval       = FALSE,   # log-rank testas
+           legend       = c(0.25, 0.25),
+           legend.labs = c("Nenaudojo", "Naudojo"),
+           legend.title = "",
+           ylab         = "",
+           xlab       = "Dienos",
+           title      = "K-M kreivė pagal HP",
+           font.main     = 9,
+           font.x        = 7,
+           font.y        = 7,
+           font.legend   = 6,
+           font.tickslab = 5,
+           ggtheme    = theme_minimal())
+
+
+
+horm$plot <- horm$plot + theme(legend.key.size = unit(0.4, "cm"),
+    legend.spacing.x = unit(0.01, "cm"),
+    panel.grid.minor = element_blank(), 
+    panel.grid.major = element_line(size = 0.1, color = "grey90"),
+    axis.ticks = element_line(linewidth = 0.1, color = "grey"),
+    axis.ticks.length = unit(0.05, "cm")
+    ) +
+  scale_y_continuous(labels = label_number(decimal.mark = ","))
+horm
+#ggsave(plot = horm$plot, filename = "KM_horm.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
 ```
+
+```{r}
+log_rank_test_hormon <- survdiff(Surv(rfstime, status_num) ~ hormon, data = data)
+
+print(log_rank_test_hormon)
+```
+
 
 ```{r fig.height=3, fig.width=6.7, warning=FALSE}
 # KM pagal naviko laipsnį
 km_grade <- survfit(Surv(rfstime, status_num) ~ grade, data = data)
-ggsurvplot(km_grade,
-           data        = data,
-           conf.int    = TRUE,
-           pval        = TRUE,
-           xlab        = "Laikas (dienos)",
-           title       = "KM kreivė pagal naviko laipsnį",
-           ggtheme     = theme_minimal())
+grade <- ggsurvplot(km_grade,
+           data       = data,
+           size        = 0.3,
+           conf.int   = TRUE,
+           censor.size  = 2,
+           censor.shape = "+",
+           pval       = FALSE,   # log-rank testas
+           legend       = c(0.15, 0.35),
+           legend.labs = c("1", "2", "3"),
+           legend.title = "",
+           ylab         = "",
+           xlab       = "Dienos",
+           title      = "K-M kreivė pagal naviko laipsnį",
+           font.main     = 9,
+           font.x        = 7,
+           font.y        = 7,
+           font.legend   = 6,
+           font.tickslab = 5,
+           ggtheme    = theme_minimal())
 
-#ggsave(filename = "KM_grade.png", width = 6.7, height = 3, units = "in", dpi = 300)
+
+
+grade$plot <- grade$plot + theme(legend.key.size = unit(0.4, "cm"),
+    legend.spacing.x = unit(0.01, "cm"),
+    panel.grid.minor = element_blank(), 
+    panel.grid.major = element_line(size = 0.1, color = "grey90"),
+    axis.ticks = element_line(linewidth = 0.1, color = "grey"),
+    axis.ticks.length = unit(0.05, "cm")
+    ) +
+  scale_y_continuous(labels = label_number(decimal.mark = ","))
+grade
+ggsave(plot = grade$plot, filename = "KM_grade.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
 ```
+
+```{r}
+log_rank_test_grade <- survdiff(Surv(rfstime, status_num) ~ grade, data = data)
+
+print(log_rank_test_grade)
+```
+
 
 ```{r fig.height=4.5, fig.width=6.7, warning=FALSE}
 data$status_num <- status_num
