@@ -14,6 +14,8 @@ library(scales)
 data <- read.csv("../datasets/gbsg.csv")
 data <- data %>% select(-X)
 
+data <- data %>%filter(age > 30)
+
 data$meno <- as.factor(data$meno)
 data$hormon <- as.factor(data$hormon)
 data$status <- as.factor(data$status)
@@ -22,7 +24,13 @@ str(data)
 ```
 
 ```{r}
-data <- data %>% mutate(age_group = ifelse(age <=40, '<=40', ifelse(age <=60, '40-60', '>60')))
+data <- data %>% 
+  mutate(age_group = case_when(
+    age <= 35 ~ "20-35",
+    age <= 55 ~ "35-55",
+    age <= 70 ~ "55-70",
+    TRUE      ~ "70+"
+  ))
 
 table(data$age_group)
 
@@ -232,6 +240,12 @@ print(log_rank_test_hormon)
 ```
 
 
+```{r}
+log_rank_test_grade <- survdiff(Surv(rfstime, status_num) ~ grade, data = data)
+
+print(log_rank_test_grade)
+```
+
 ```{r fig.height=3, fig.width=6.7, warning=FALSE}
 # KM pagal naviko laipsnį
 km_grade <- survfit(Surv(rfstime, status_num) ~ grade, data = data)
@@ -268,13 +282,6 @@ grade$plot <- grade$plot + theme(legend.key.size = unit(0.4, "cm"),
 grade
 ggsave(plot = grade$plot, filename = "KM_grade.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
 ```
-
-```{r}
-log_rank_test_grade <- survdiff(Surv(rfstime, status_num) ~ grade, data = data)
-
-print(log_rank_test_grade)
-```
-
 
 ```{r fig.height=4.5, fig.width=6.7, warning=FALSE}
 data$status_num <- status_num
@@ -316,7 +323,7 @@ data$hormon <- as.factor(data$hormon)
 status_num <- as.numeric(as.character(data$status))
 
 cox_full <- coxph(Surv(rfstime, status_num) ~ 
-                    age_group + meno + size + grade + 
+                    age + meno + size + grade + 
                     nodes + pgr + er + hormon, data = data)
 summary(cox_full)
 ```
@@ -434,14 +441,15 @@ coef(cox_full)
 
 ```{r message=FALSE, warning=FALSE}
 data <- data %>%
-  mutate(log_nodes = log(nodes + 1))
+  mutate(log_nodes = log(nodes + 1),
+         log_er = log(er + 1))
 
 cox_full2 <- coxph(Surv(rfstime, status_num) ~ 
                     age + meno + size + grade + 
-                    log_nodes + pgr + er + hormon, data = data)
+                    log_nodes + pgr + log_er + hormon, data = data)
 
 res <- residuals(cox_full2, type = "martingale")
-target_vars <- c("age", "size", "log_nodes", "pgr", "er")
+target_vars <- c("age", "size", "log_nodes", "pgr", "log_er")
 b <- coef(cox_full2)[target_vars]
 
 plot_data <- data %>%
@@ -457,19 +465,19 @@ plot_data <- data %>%
 p1 <- ggplot(plot_data, aes(x = x_value, y = residuals)) +
   geom_point(alpha = 0.5, color = "black") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "blue", span = 0.75) +
+  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "red", span = .95) +
   facet_wrap(~variable, scales = "free_x", nrow = 1) +
   labs(x = NULL, y = "Martingale Residuals") +
-  theme_minimal() +
+  theme_bw() +
   theme(strip.text = element_text(face = "bold", size = 11))
 
 p2 <- ggplot(plot_data, aes(x = x_value, y = comp_residual)) +
   geom_point(alpha = 0.5, color = "black") +
   geom_smooth(method = "lm", linetype = "dashed", se = FALSE, color = "darkgray") +
-  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "blue", span = 0.75) +
+  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "red", span = 0.8) +
   facet_wrap(~variable, scales = "free_x", nrow = 1) +
   labs(x = "Covariate Value", y = "Component + Residual") +
-  theme_minimal() +
+  theme_bw() +
   theme(strip.text = element_blank())
 
 final_plot <- p1 / p2
