@@ -61,7 +61,7 @@ char <- data %>%
 char
 ```
 
-```{r}
+```{r fig.height=3, fig.width=6.7, message=FALSE, warning=FALSE}
 data_long <- data %>%
   dplyr::select(-status, -hormon, -meno, -pid, -grade) %>%
   pivot_longer(
@@ -77,10 +77,13 @@ data_long %>%
   geom_boxplot(outlier.alpha = 0.2) +
   facet_wrap(~variable, scales = "free", ncol = 3) + 
   theme_bw() +
-  theme(legend.position = 'none')
+  theme(legend.position = 'none') +
+  labs(x = 'Kintamaasis', y = 'Reikšmė')
+
+#ggsave(filename = "boxplot.png", width = 6.7, height = 3, units = "in", dpi = 300)
 ```
 
-```{r}
+```{r fig.height=4, fig.width=6.7, message=FALSE, warning=FALSE}
 data_long <- data %>%
   dplyr::select(status, age, size, nodes, pgr, er, rfstime) %>%
   pivot_longer(
@@ -103,9 +106,11 @@ data_long %>%
        y = "Reikšmė") +
   theme_bw() +
   theme(legend.position = 'bottom')
+
+#ggsave(filename = "boxplot_by_status.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
 
-```{r}
+```{r fig.height=3, fig.width=6.7, warning=FALSE}
 status_num <- as.numeric(as.character(data$status))
 
 km_overall <- survfit(Surv(rfstime, status_num) ~ 1, data = data)
@@ -116,9 +121,11 @@ ggsurvplot(km_overall,
            ylab       = "Išgyvenamumo tikimybė",
            title      = "Kaplan-Meier kreivė (visi pacientai)",
            ggtheme    = theme_minimal())
+
+#ggsave(filename = "KM_all.png", width = 6.7, height = 3, units = "in", dpi = 300)
 ```
 
-```{r}
+```{r fig.height=3, fig.width=6.7, warning=FALSE}
 # KM pagal menopauzę
 km_meno <- survfit(Surv(rfstime, status_num) ~ meno, data = data)
 ggsurvplot(km_meno,
@@ -129,6 +136,8 @@ ggsurvplot(km_meno,
            xlab       = "Laikas (dienos)",
            title      = "KM kreivė pagal menopauzę",
            ggtheme    = theme_minimal())
+
+#ggsave(filename = "KM_meno.png", width = 6.7, height = 3, units = "in", dpi = 300)
 ```
 
 ```{r}
@@ -145,7 +154,7 @@ res
 
 
 
-```{r}
+```{r fig.height=3, fig.width=6.7, warning=FALSE}
 # KM pagal hormoninę terapiją
 km_hormon <- survfit(Surv(rfstime, status_num) ~ hormon, data = data)
 ggsurvplot(km_hormon,
@@ -156,9 +165,11 @@ ggsurvplot(km_hormon,
            xlab        = "Laikas (dienos)",
            title       = "KM kreivė pagal hormoninę terapiją",
            ggtheme     = theme_minimal())
+
+#ggsave(filename = "KM_hormon.png", width = 6.7, height = 3, units = "in", dpi = 300)
 ```
 
-```{r}
+```{r fig.height=3, fig.width=6.7, warning=FALSE}
 # KM pagal naviko laipsnį
 km_grade <- survfit(Surv(rfstime, status_num) ~ grade, data = data)
 ggsurvplot(km_grade,
@@ -168,31 +179,32 @@ ggsurvplot(km_grade,
            xlab        = "Laikas (dienos)",
            title       = "KM kreivė pagal naviko laipsnį",
            ggtheme     = theme_minimal())
+
+#ggsave(filename = "KM_grade.png", width = 6.7, height = 3, units = "in", dpi = 300)
 ```
 
-```{r}
-data$status_num <- status_num
-data$statusLabel <- ifelse(status_num == 1, "Įvykis", "Cenzūruota")
-
-kiekybiniai_vars <- c("age", "size", "nodes", "pgr", "er")
-
+```{r fig.height=4.5, fig.width=6.7, warning=FALSE}
 plots <- lapply(kiekybiniai_vars, function(var) {
-  ggplot(data, aes_string(x = var, y = "rfstime",
-                          color = "statusLabel",
+  ggplot(data, aes_string(x = var, y = "rfstime", 
+                          color = "statusLabel", 
                           shape = "statusLabel")) +
-    geom_point(alpha = 0.5, size = 1.5) +
-    scale_color_manual(values = c("Įvykis" = "firebrick",
+    geom_point(alpha = 0.5, size = 1) +
+    scale_color_manual(values = c("Įvykis" = "firebrick", 
                                   "Cenzūruota" = "steelblue")) +
-    labs(title = paste("rfstime ~", var),
-         x = var, y = "Laikas (dienos)",
+    labs(title = paste("RFS laikas ~", var),
+         x = NULL, y = "Dienos",
          color = "Statusas", shape = "Statusas") +
-    theme_minimal()
+    theme_bw()
 })
 
-library(gridExtra)
-grid.arrange(grobs = plots, ncol = 2)
-```
+combined_plot <- wrap_plots(plots, ncol = 2) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = 'bottom')
 
+print(combined_plot)
+
+#ggsave(filename = "scater.png", width = 6.7, height = 4.5, units = "in", dpi = 300)
+```
 
 ```{r}
 data$meno   <- as.factor(data$meno)
