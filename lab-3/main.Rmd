@@ -3,6 +3,7 @@ library(tidyverse)
 library(survival)
 library(survminer)
 library(car)
+library(TSHRC)
 ```
 
 # Duomenys
@@ -99,12 +100,26 @@ km_meno <- survfit(Surv(rfstime, status_num) ~ meno, data = data)
 ggsurvplot(km_meno,
            data       = data,
            conf.int   = TRUE,
-           pval       = TRUE,   # log-rank testas
+           pval       = FALSE,   # log-rank testas
            legend.labs = c("Prieš menopauzę", "Po menopauzės"),
            xlab       = "Laikas (dienos)",
            title      = "KM kreivė pagal menopauzę",
            ggtheme    = theme_minimal())
 ```
+
+```{r}
+time_vec   <- data$rfstime
+status_vec <- data$status_num
+group_vec  <- as.numeric(as.factor(data$meno)) - 1
+
+res <- twostage(time_vec, status_vec, group_vec, nboot = 100)
+
+res
+```
+
+
+
+
 
 ```{r}
 # KM pagal hormoninę terapiją
