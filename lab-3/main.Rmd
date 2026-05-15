@@ -511,17 +511,13 @@ plot(ph_test)
 coef(cox_full)
 ```
 
-```{r fig.height=4, fig.width=6.7, warning=FALSE}
-data <- data %>% 
-  mutate(log_nodes = log(nodes + 1),
-         log_er = log(er + 1))
-
+```{r fig.height=4, fig.width=6.7, message=FALSE, warning=FALSE}
 cox_full2 <- coxph(Surv(rfstime, status_num) ~ 
                     age + meno + size + grade + 
-                    log_nodes + pgr + log_er + hormon, data = data)
+                    nodes + pgr + er + hormon, data = data)
 
 res <- residuals(cox_full2, type = "martingale")
-target_vars <- c("age", "size", "log_nodes", "pgr", "log_er")
+target_vars <- c("age", "size", "nodes", "pgr", "er")
 b <- coef(cox_full2)[target_vars]
 
 plot_data <- data %>%
@@ -533,7 +529,7 @@ plot_data <- data %>%
     comp_residual = beta * x_value + residuals,
     variable = factor(variable, 
                       levels = target_vars,
-                      labels = c("Amžius", "Auglio dydis", "log(Limfmazgiai)", "PGR", "log(ER)"))
+                      labels = c("Amžius", "Auglio dydis", "Limfmazgiai", "PGR", "ER"))
   )
 
 p1 <- ggplot(plot_data, aes(x = x_value, y = residuals)) +
