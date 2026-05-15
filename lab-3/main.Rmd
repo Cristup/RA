@@ -377,7 +377,7 @@ for (j in 1:9) {
        ylab=names(coef(cox_full))[j],
        main=paste(names(coef(cox_full))[j]),
        col="steelblue", 
-       #ylim = c(-y_limitas, y_limitas,
+       #ylim = c(-y_limitas, y_limitas),
        pch=20)
   
   abline(h=0, lty=1, col="black") 
@@ -386,6 +386,65 @@ for (j in 1:9) {
 }
 ```
 
+```{r fig.height=4.3, fig.width=6.7}
+png(filename = "dfbeta.png", width = 6.7*300, height = 4.3*300, res = 300)
+options(OutDec = ",")
+
+threshold <- 2 / sqrt(680)
+dfbeta <- residuals(cox_full, type = "dfbeta")
+
+pavadinimai <- c("Amžius", "Menopauzė1", "Auglio dydis", "Naviko laipsnis2", 
+                 "Naviko laipsnis3", "Limfmazgiai", "PGR", "HR", "HT1")
+
+par(mfrow = c(3, 3), mar = c(2, 4, 3, 1), oma = c(3, 0, 0, 0))
+
+for (j in 1:length(pavadinimai)) {
+  y_reikšmės <- dfbeta[, j]
+  
+  plot(y_reikšmės,
+       ylab = "",
+       xlab = "",
+       main = pavadinimai[j],
+       col = rgb(70, 130, 180, maxColorValue = 255, alpha = 150),
+       pch = 20,
+       cex = 1.1,
+       yaxt = "n")
+  
+  ticks <- axTicks(2)
+  
+  formatted_labels <- lapply(ticks, function(x) {
+    if (abs(x) < 1e-10) {
+      txt <- sprintf("%.2f", 0)
+      return(as.expression(gsub("\\.", ",", txt))[[1]])
+    }
+    
+    exponent <- floor(log10(abs(x)))
+    
+    if (abs(exponent) < 3) {
+      txt <- sprintf("%.2f", x)
+      return(as.expression(gsub("\\.", ",", txt))[[1]])
+    } else {
+      base <- x / 10^exponent
+      base_txt <- gsub("\\.", ",", sprintf("%.2f", base))
+      return(bquote(.(base_txt) %*% 10^.(exponent)))
+    }
+  })
+  
+  labels_expr <- do.call(expression, formatted_labels)
+  
+  axis(2, at = ticks, labels = labels_expr, las = 1, cex.axis = 0.8)
+  
+  abline(h = 0, lty = 1, col = "black") 
+  abline(h = threshold, lty = 2, col = "red")
+  abline(h = -threshold, lty = 2, col = "red")
+}
+
+mtext("Stebėjimų numeriai", side = 1, outer = TRUE, line = 1, cex = 1)
+
+options(OutDec = ".")
+
+dev.off()
+```
 
 ## PH prielaida
 
@@ -500,6 +559,8 @@ p2 <- ggplot(plot_data, aes(x = x_value, y = comp_residual)) +
 final_plot <- p1 / p2
 
 print(final_plot)
+
+#ggsave(filename = "martingale.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
 
 
