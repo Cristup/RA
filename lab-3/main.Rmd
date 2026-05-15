@@ -5,6 +5,8 @@ library(survminer)
 library(car)
 ```
 
+# Duomenys
+
 ```{r}
 data <- read.csv("../datasets/gbsg.csv")
 data <- data %>% select(-X)
@@ -15,6 +17,7 @@ data$status <- as.factor(data$status)
 
 str(data)
 ```
+# Pradinė analizė
 
 ```{r}
 summary(data)
@@ -158,27 +161,29 @@ data$grade  <- as.factor(data$grade)
 data$hormon <- as.factor(data$hormon)
 ```
 
-
+# Kokso modelis
 
 ```{r}
 status_num <- as.numeric(as.character(data$status))
 
 cox_full <- coxph(Surv(rfstime, status_num) ~ 
                     age + meno + size + grade + 
-                    nodes + pgr + er + hormon, 
-                  data = data)
+                    nodes + pgr + er + hormon, data = data)
 summary(cox_full)
 ```
+
+## Multikolinearumas
 
 ```{r}
 vif(cox_full)
 ```
 
+
+## Išskirtys
+
 ```{r}
 2 / sqrt(686)
 ```
-
-
 
 ```{r}
 dfbeta <- residuals(cox_full, type="dfbeta")
@@ -192,13 +197,64 @@ for (j in 1:9) {
 
 
 
-
+## PH prielaida
 
 ```{r}
 ph_test <- cox.zph(cox_full)
 print(ph_test)
 plot(ph_test)
 ```
+
+
+```{r}
+unfold_data <- function(data, time = "tenure", event = "Churn") {
+  out <- data[rep(seq_len(nrow(data)), pmax(data[[time]], 1)), ]
+  
+  out$start <- unlist(lapply(data[[time]], function(t) {
+    if (t <= 0) 0 else seq(0, t - 1)
+  }))
+  
+  out$stop <- unlist(lapply(data[[time]], function(t) {
+    if (t <= 0) 1 else seq(1, t)
+  }))
+  
+  out[[event]] <- 0
+  
+  last_rows <- cumsum(pmax(data[[time]], 1))
+  out[[event]][last_rows] <- data[[event]]
+  
+  rownames(out) <- NULL
+  out
+}
+```
+
+
+```{r}
+data_long_daily <- unfold_data(
+  data = data, 
+  time = "rfstime",
+  event = "status_num"
+)
+```
+
+
+```{r}
+model_daily <- coxph(
+  Surv(start, stop, status_num) ~ 
+    age + meno + size + grade + nodes + pgr + er + hormon + meno:stop, 
+  data = data_long_daily)
+```
+```{r}
+summary(model_daily)
+```
+
+```{r}
+ph_test <- cox.zph(model_daily)
+print(ph_test)
+plot(ph_test)
+```
+
+## Tiesiškumo prielaida
 
 ```{r}
 par(mfrow=c(2, 2))
@@ -237,83 +293,6 @@ lines(lowess(X[, j], b[j]*X[, j] + res, iter=0))
 }
 par(mfrow=c(1, 1))
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-library(survival)
-library(dplyr)
-
-df_gbsg <- read.csv("../datasets/gbsg.csv") %>%
-  select(-X)
-
-df_gbsg <- df_gbsg %>%
-  mutate(
-    status_num = as.numeric(as.character(status)),
-    meno   = as.factor(meno),
-    hormon = as.factor(hormon),
-    grade  = as.factor(grade),
-    status = as.factor(status)) %>%
-  select(-status, -pid)
-
-data_split <- survSplit(formula = Surv(rfstime, status_num) ~ ., data = df_gbsg, 
-  cut = unique(df_gbsg$rfstime[df_gbsg$status_num == 1]), start = "start", end = "stop")
-
-print(head(data_split, 5))
-
-model_interaction <- coxph(
-  Surv(start, stop, status_num) ~ age + meno + size + grade + nodes + pgr + er + hormon +
-                                  age:stop + meno:stop + grade:stop + pgr:stop + er:stop, data = data_split)
-
-summary(model_interaction)
-```
-
-```{r}
-library(survival)
-library(dplyr)
-library(RcmdrPlugin.survival)
-
-df_gbsg <- read.csv("../datasets/gbsg.csv") %>%
-  select(-X) %>%
-  mutate(
-    status_num = as.numeric(as.character(status)),
-    meno   = as.factor(meno),
-    hormon = as.factor(hormon),
-    grade  = as.factor(grade)
-  )
-
-
-data_long <- RcmdrPlugin.survival::unfold(df_gbsg, time = "rfstime", event = "status_num", id = "pid")
-
-print(head(data_long[data_long$pid == 1, c("pid", "start", "stop", "status_num", "age")], 10))
-
-model_interaction <- coxph(
-  Surv(start, stop, status_num) ~ 
-    age + meno + size + grade + nodes + pgr + er + hormon +
-    age:stop + meno:stop + grade:stop + pgr:stop + er:stop, data = data_long)
-
-summary(model_interaction)
-```
-
-
-
-
-
-
-
-
-
 
 
 
