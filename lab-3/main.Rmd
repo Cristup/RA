@@ -468,8 +468,8 @@ plot(ph_test)
 coef(cox_full)
 ```
 
-```{r message=FALSE, warning=FALSE}
-data <- data %>%
+```{r fig.height=4, fig.width=6.7, warning=FALSE}
+data <- data %>% 
   mutate(log_nodes = log(nodes + 1),
          log_er = log(er + 1))
 
@@ -488,33 +488,35 @@ plot_data <- data %>%
   mutate(
     beta = b[variable],
     comp_residual = beta * x_value + residuals,
-    variable = factor(variable, levels = target_vars)
+    variable = factor(variable, 
+                      levels = target_vars,
+                      labels = c("Amžius", "Auglio dydis", "log(Limfmazgiai)", "PGR", "log(ER)"))
   )
 
 p1 <- ggplot(plot_data, aes(x = x_value, y = residuals)) +
-  geom_point(alpha = 0.5, color = "black") +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "red", span = .95) +
+  geom_point(alpha = 0.45, color = "#4682b4", size = 0.9) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "#26d96e") +
+  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "#b22222", span = 0.95, linewidth = 0.7) +
   facet_wrap(~variable, scales = "free_x", nrow = 1) +
-  labs(x = NULL, y = "Martingale Residuals") +
+  labs(x = NULL, y = "Martingalų liekanos") +
   theme_bw() +
-  theme(strip.text = element_text(face = "bold", size = 11))
+  theme(strip.text = element_text(face = "bold", size = 9),
+        axis.text.x = element_text(size = 7))
 
 p2 <- ggplot(plot_data, aes(x = x_value, y = comp_residual)) +
-  geom_point(alpha = 0.5, color = "black") +
-  geom_smooth(method = "lm", linetype = "dashed", se = FALSE, color = "darkgray") +
-  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "red", span = 0.8) +
+  geom_point(alpha = 0.45, color = "#4682b4", size = 0.9) +
+  geom_smooth(method = "lm", linetype = "dashed", se = FALSE, color = "#26d96e") +
+  geom_smooth(method = "loess", method.args = list(degree = 1), se = TRUE, color = "#b22222", span = 0.8, linewidth = 0.7) +
   facet_wrap(~variable, scales = "free_x", nrow = 1) +
-  labs(x = "Covariate Value", y = "Component + Residual") +
+  labs(x = "Kovariantės reikšmė", y = "Komponentė + liekanos") +
   theme_bw() +
-  theme(strip.text = element_blank())
+  theme(strip.text = element_blank(),
+        axis.text.x = element_text(size = 7))
 
 final_plot <- p1 / p2
 
 print(final_plot)
 ```
-
-
 
 
 
