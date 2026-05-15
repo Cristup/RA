@@ -19,6 +19,16 @@ data$status <- as.factor(data$status)
 
 str(data)
 ```
+
+```{r}
+data <- data %>% mutate(age_group = ifelse(age <=40, '<=40', ifelse(age <=60, '40-60', '>60')))
+
+table(data$age_group)
+
+table(data$age_group, data$status)
+```
+
+
 # Pradinė analizė
 
 ```{r}
@@ -63,7 +73,7 @@ char
 
 ```{r fig.height=3, fig.width=6.7, message=FALSE, warning=FALSE}
 data_long <- data %>%
-  dplyr::select(-status, -hormon, -meno, -pid, -grade) %>%
+  dplyr::select(-status, -hormon, -meno, -pid, -grade, -age_group) %>%
   pivot_longer(
     cols = everything(), 
     names_to = "variable", 
@@ -223,7 +233,7 @@ data$hormon <- as.factor(data$hormon)
 status_num <- as.numeric(as.character(data$status))
 
 cox_full <- coxph(Surv(rfstime, status_num) ~ 
-                    age + meno + size + grade + 
+                    age_group + meno + size + grade + 
                     nodes + pgr + er + hormon, data = data)
 summary(cox_full)
 ```
