@@ -26,6 +26,16 @@ data$status <- as.factor(data$status)
 str(data)
 ```
 
+```{r}
+set.seed(1)
+
+data_split <- initial_split(data, prop = 0.8, strata = status)
+
+train_data <- training(data_split)
+train_data <- train_data %>% slice_sample(prop = 1)
+test_data  <- testing(data_split)
+test_data <- test_data %>% slice_sample(prop = 1)
+```
 
 # Pradinė analizė
 
@@ -529,7 +539,6 @@ data_long_daily <- unfold_data(
 )
 ```
 
-
 ```{r}
 head(data_long_daily)
 ```
@@ -605,6 +614,103 @@ print(final_plot)
 
 #ggsave(filename = "martingale.png", width = 6.7, height = 4, units = "in", dpi = 300)
 ```
+
+# Galutinis modelis
+
+```{r}
+train_data$status_num <- as.numeric(as.character(train_data$status))
+test_data$status_num <- as.numeric(as.character(test_data$status))
+
+train_data$log_er = log(train_data$er +1)
+train_data$log_nodes = log(train_data$nodes +1)
+
+test_data$log_er = log(test_data$er +1)
+test_data$log_nodes = log(test_data$nodes +1)
+
+data_long_daily_train <- unfold_data(
+  data = train_data, 
+  time = "rfstime",
+  event = "status_num"
+)
+
+data_long_daily_test <- unfold_data(
+  data = test_data, 
+  time = "rfstime",
+  event = "status_num"
+)
+```
+
+```{r}
+model_daily_final <- coxph(Surv(start, stop, status_num) ~ 
+    age + meno + size + grade + log_nodes + pgr + log_er + hormon + meno:stop, 
+  data = data_long_daily_train)
+
+summary(model_daily_final)
+```
+
+```{r}
+model_final <- coxph(Surv(rfstime, status_num) ~ 
+                    age + grade + log_nodes + pgr + hormon, data = train_data)
+
+summary(model_final)
+```
+
+```{r}
+concordance(model_final, newdata = test_data)
+```
+age
+size
+grade
+log_nodes
+pgr
+log_er
+hormon
+
+pgr:hormon
+
+```{r}
+model_final_gama <- coxph(Surv(rfstime, status_num) ~ 
+                     grade + log_nodes + pgr + pgr:hormon, data = train_data)
+
+summary(model_final_gama)
+AIC(model_final_gama)
+concordance(model_final_gama, newdata = test_data)
+```
+
+```{r}
+step_full <- coxph(Surv(rfstime, status_num) ~ 
+                    age + size + grade + 
+                    log_nodes + pgr + log_er + hormon, data = train_data)
+
+step_both <- stats::step(step_full, direction = "both")
+summary(step_both)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
