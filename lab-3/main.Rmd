@@ -663,10 +663,12 @@ data_long_daily_train$meno_num <- as.numeric(data_long_daily_train$meno) - 1
 data_long_daily_test$meno_num <- as.numeric(data_long_daily_test$meno) - 1
 
 model_final_new <- coxph(Surv(start, stop, status_num) ~ 
-     grade + log_nodes + pgr + hormon + meno_num:stop, 
+     grade + log_nodes + pgr + meno_num:stop + pgr:hormon,
   data = data_long_daily_train)
 
 summary(model_final_new)
+concordance(model_final_new, newdata = data_long_daily_test)
+AIC(model_final_new)
 ```
 
 
