@@ -23,6 +23,7 @@ data <- data %>%filter(age >= 30)
 data$meno <- as.factor(data$meno)
 data$hormon <- as.factor(data$hormon)
 data$status <- as.factor(data$status)
+data$grade <- as.factor(data$grade)
 
 str(data)
 ```
@@ -58,9 +59,13 @@ table(meno)
 
 table(hormon)
 
+table(data$grade)
+
 table(data$meno, data$status)
 
 table(data$hormon, data$status)
+
+table(data$grade, data$status)
 
 table(data$meno, data$hormon)
 ```
@@ -173,7 +178,7 @@ mp$plot <- mp$plot + theme(legend.key.size = unit(0.4, "cm"),
     ) +
   scale_y_continuous(labels = label_number(decimal.mark = ","))
 mp
-ggsave(plot = mp$plot, filename = "KM_meno.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
+#ggsave(plot = mp$plot, filename = "KM_meno.png", width = 2.2, height = 1.5, units = "in", dpi = 300)
 ```
 
 ```{r}
