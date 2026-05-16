@@ -9,6 +9,7 @@ library(scales)
 library(ggplot2)
 library(grid)
 library(gridExtra)
+library(rsample)
 ```
 
 # Duomenys
@@ -640,13 +641,34 @@ data_long_daily_test <- unfold_data(
 )
 ```
 
+
 ```{r}
+data_long_daily_train$meno_num <- as.numeric(data_long_daily_train$meno) - 1
+
 model_daily_final <- coxph(Surv(start, stop, status_num) ~ 
-    age + meno + size + grade + log_nodes + pgr + log_er + hormon + meno:stop, 
+    age + meno + size + grade + log_nodes + pgr + log_er + hormon + meno_num:stop, 
   data = data_long_daily_train)
 
 summary(model_daily_final)
 ```
+
+```{r}
+step_both <- stats::step(model_daily_final, direction = "both")
+summary(step_both)
+```
+
+
+```{r}
+data_long_daily_train$meno_num <- as.numeric(data_long_daily_train$meno) - 1
+data_long_daily_test$meno_num <- as.numeric(data_long_daily_test$meno) - 1
+
+model_final_new <- coxph(Surv(start, stop, status_num) ~ 
+     grade + log_nodes + pgr + hormon + meno_num:stop, 
+  data = data_long_daily_train)
+
+summary(model_final_new)
+```
+
 
 ```{r}
 model_final <- coxph(Surv(rfstime, status_num) ~ 
@@ -655,8 +677,20 @@ model_final <- coxph(Surv(rfstime, status_num) ~
 summary(model_final)
 ```
 
+
 ```{r}
-concordance(model_final, newdata = test_data)
+data_long_daily_train$start      <- as.numeric(data_long_daily_train$start)
+data_long_daily_train$stop       <- as.numeric(data_long_daily_train$stop)
+data_long_daily_train$status_num <- as.numeric(data_long_daily_train$status_num)
+
+data_long_daily_test$start      <- as.numeric(data_long_daily_test$start)
+data_long_daily_test$stop       <- as.numeric(data_long_daily_test$stop)
+data_long_daily_test$status_num <- as.numeric(data_long_daily_test$status_num)
+```
+
+
+```{r}
+concordance(model_final_new, newdata = data_long_daily_test)
 ```
 age
 size
