@@ -140,7 +140,7 @@ ggsurvplot(km_overall,
 
 ```{r fig.height=1.5, fig.width=2.2, warning=FALSE}
 # KM pagal menopauzę
-km_meno <- survfit(Surv(rfstime, status_num) ~ meno, data = data)
+km_meno <- survfit(Surv(rfstime, status_num) ~ meno, conf.type="log-log", data = data)
 mp <- ggsurvplot(km_meno,
            data       = data,
            size        = 0.3,
@@ -191,7 +191,7 @@ res
 
 ```{r fig.height=3, fig.width=6.7, warning=FALSE}
 # KM pagal hormoninę terapiją
-km_hormon <- survfit(Surv(rfstime, status_num) ~ hormon, data = data)
+km_hormon <- survfit(Surv(rfstime, status_num) ~ hormon, conf.type="log-log", data = data)
 
 horm <- ggsurvplot(km_hormon,
            data       = data,
@@ -242,7 +242,7 @@ print(log_rank_test_grade)
 
 ```{r fig.height=3, fig.width=6.7, warning=FALSE}
 # KM pagal naviko laipsnį
-km_grade <- survfit(Surv(rfstime, status_num) ~ grade, data = data)
+km_grade <- survfit(Surv(rfstime, status_num) ~ grade, conf.type="log-log", data = data)
 grade <- ggsurvplot(km_grade,
            data       = data,
            size        = 0.3,
