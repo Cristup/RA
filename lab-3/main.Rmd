@@ -362,7 +362,7 @@ vif(cox_full)
 ## Išskirtys
 
 ```{r}
-2 / sqrt(686)
+2 / sqrt(680)
 ```
 
 ```{r}
@@ -376,7 +376,7 @@ for (j in 1:9) {
 ```
 
 ```{r}
-threshold <- 2 / sqrt(686)
+threshold <- 2 / sqrt(680)
 dfbeta <- residuals(cox_full, type="dfbeta")
 par(mfrow=c(3, 3))
 
@@ -509,7 +509,7 @@ options(OutDec = ".")
 ```
 
 ```{r}
-unfold_data <- function(data, time = "tenure", event = "Churn") {
+unfold_data <- function(data, time = "time", event = "event") {
   out <- data[rep(seq_len(nrow(data)), pmax(data[[time]], 1)), ]
   
   out$start <- unlist(lapply(data[[time]], function(t) {
