@@ -722,7 +722,52 @@ step_both <- stats::step(step_full, direction = "both")
 summary(step_both)
 ```
 
+# Kryžminė validacija
 
+data_long_daily_trai\$meno_num <- as.numeric(data_long_daily_train$meno) - 1
+data_long_daily_test\$meno_num <- as.numeric(data_long_daily_test$meno) - 1
+
+model_final_new <- coxph(Surv(start, stop, status_num) ~ 
+     grade + log_nodes + pgr + meno_num:stop + pgr:hormon,
+  data = data_long_daily_train)
+
+```{r}
+data_long_daily$log_nodes <- log(data_long_daily$nodes)
+data_long_daily$meno_num <- as.numeric(data_long_daily$meno) - 1
+```
+
+
+```{r}
+set.seed(123)
+grupiu_skaicius <- 3
+
+unikalus_pid <- unique(data_long_daily$pid)
+
+grupiu_sarasas <- sample(cut(seq_len(length(unikalus_pid)), breaks = grupiu_skaicius, labels = FALSE))
+
+pacientu_grupavimas <- data.frame(pid = unikalus_pid, grupe = grupiu_sarasas)
+
+duomenys_cv <- data_long_daily %>% inner_join(pacientu_grupavimas, by = "pid")
+
+c_indeksai <- numeric(grupiu_skaicius)
+
+for (i in 1:grupiu_skaicius) {
+  
+  mokymo_duomenys   <- duomenys_cv %>% filter(grupe != i)
+  testavimo_duomenys <- duomenys_cv %>% filter(grupe == i)
+  
+  modelis_grupės <- coxph(Surv(start, stop, status_num) ~ 
+                            grade + log_nodes + pgr + meno_num:stop + pgr:hormon,
+                          data = mokymo_duomenys)
+  
+  vertinimas <- concordance(modelis_grupės, newdata = testavimo_duomenys)
+  
+  c_indeksai[i] <- vertinimas$concordance
+}
+
+cat("Kiekvienos grupės C-indeksai:\n", round(c_indeksai, 4), "\n\n")
+cat("Bendras kryžminės validacijos C-indekso vidurkis:", round(mean(c_indeksai), 4), "\n")
+```
 
 
 
