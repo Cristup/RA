@@ -775,20 +775,55 @@ cat("Bendras kryžminės validacijos C-indekso vidurkis:", round(mean(c_indeksai
 ```
 
 
+# Prognozė
 
 
+```{r}
+new_patients <- data.frame(
+  pid = c(1, 2),
+  grade = as.factor(c(1, 3)),
+  nodes = c(1, 15),
+  pgr  = c(150, 0),
+  hormon = as.factor(c(1, 0)),
+  meno = as.factor(c(0, 1)),
+  status_num = 0
+)
 
+new_patients_365 <- new_patients %>%
+  mutate(
+    rfstime = 365*5,
+    status_num = 0,
+    log_nodes = log(nodes + 1)
+  )
 
+new_patients_long_365 <- unfold_data(
+  data  = new_patients_365,
+  time  = "rfstime",
+  event = "status_num"
+)
 
+new_patients_long_365 <- new_patients_long_365 %>%
+  mutate(
+    meno_num = as.numeric(as.character(meno)),
+    start = as.numeric(start),
+    stop = as.numeric(stop)
+  )
 
+new_patients_long_365$lambda_interval <- predict(
+  model_final_new, 
+  newdata = new_patients_long_365, 
+  type = "expected"
+)
 
+predictions_365 <- new_patients_long_365 %>%
+  group_by(pid) %>%
+  summarise(
+    total_cum_hazard = sum(lambda_interval),
+    surv_prob = exp(-total_cum_hazard)
+  )
 
-
-
-
-
-
-
+print(predictions_365)
+```
 
 
 
